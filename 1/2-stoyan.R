@@ -52,6 +52,26 @@ friendship_w2 <- net_w2[as.character(ids), as.character(ids)]
 set.seed(161)
 permutations <- 5 * 1000
 reg1 <- netlogit(friendship_w2, friendship_w1, reps = permutations, nullhyp = "qapy")
+summary(reg1)
 
-print(summary(reg1))
+# ------------------------------------------------------------------------------------
+# (2)
+# ------------------------------------------------------------------------------------
+
+literacyReceiver <- matrix(attr$literacy_end, length(ids), length(ids), byrow = TRUE) # (i)
+sameGender <- outer(attr$gender, attr$gender, "==") * 1 # (ii)
+hiseiSender <- matrix(attr$HISEI, length(ids), length(ids), byrow = FALSE) # (iii)
+
+zm <- list(
+  friendship_w1 = friendship_w1,
+  literacyReceiver = literacyReceiver,
+  sameGender = sameGender,
+  hiseiSender = hiseiSender
+)
+
+set.seed(161) 
+permutations <- 5 * 1000
+reg2 <- netlogit(friendship_w2, zm, reps = permutations, nullhyp = "qapspp") # takes a while to finish
+summary(reg2)
+
 
