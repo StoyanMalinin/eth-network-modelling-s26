@@ -1,0 +1,18 @@
+---
+title: Network modelling - Assignmen 1 - Group 24 
+output: pdf_document
+author:
+  - Andrin ...
+  - Joshua ...
+  - Lia ...
+  - Stoyan Malinin
+---
+
+# Task 1
+TODO
+
+# Task 2
+TODO
+
+# Task 3
+TODO
