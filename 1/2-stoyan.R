@@ -90,7 +90,7 @@ run_qap_for_classroom <- function(class_id, attr_raw, base_path = "./Lintner/") 
   row_coef <- data.frame(
     Classroom = class_id,
     Friendship_from_W1 = ests[2],
-    Literacy_Sender = ests[3],
+    Literacy_Receiver = ests[3],
     Gender_Match = ests[4],
     HISEI_Sender = ests[5]
   )
