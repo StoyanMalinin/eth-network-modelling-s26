@@ -9,10 +9,86 @@ author:
 ---
 
 # Task 1
+
 TODO
 
 # Task 2
-TODO
+
+**TODO:** Think about whether to use one-sided or two sided tests to report significance
+
+## (1)
+
+After running the QAP logistic regression, we see a slope coefficient of ... with a p-value of ..... Therefore the result is significant and we can state that friendship in W1 is positively correlated with friendship in W2.
+
+## (2)
+
+The values are defined as follows:
+
+```{r, eval=FALSE}
+literacyReceiver <- matrix(attr$literacy_end, length(ids), length(ids), byrow = TRUE) # (i)
+sameGender <- outer(attr$gender, attr$gender, "==") * 1 # (ii)
+hiseiSender <- matrix(attr$HISEI, length(ids), length(ids), byrow = FALSE) # (iii)
+```
+
+- For (i) we create a matrix where each column is filled with the literacy score of the corresponding student.
+- For (ii) we create a matrix with one in case of a gender match, and zero otherwise.
+- For (iii) we create a matrix where each row is filled with the HISEI score of each student
+
+## (3)
+Here are the coefficients for the regressors together with the corresponding p-values
+
+| Name | Coefficient | p-value |
+| ---  | --- | --- |
+| Friendship W1 | 2.318175 | 0.0000 |
+| Literacy receiver | 0.0163386306 | 0.1282 |
+| Same gender | 1.8688700 | 0.0000 |
+| HISEI sender | 0.0290319336 | 0.1752 |
+
+Here are the corresponding interpretations (for the 5% significance level):
+
+- The coefficient from (i) is insignificant, therefore we cannot confirm that higher literacy scores are associated with more friendship nominations received.
+- The coefficient from (ii) is positive and significant, so we can confirm the statement that having the same gender increases the likelihood of having a friendship nomination.
+- The coefficient from (iii) is insignificant, so we cannot confirm the statement that higher HISEI values are associated with more friendship nominations send.
+
+*Note: Insignificant coefficients mean that we cannot reject the null hypothesis that there is no correlation (the coefficient is 0).* 
+
+## (4)
+```{r, echo=FALSE, message=FALSE}
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+
+global_coefs <- read.csv("qap_results_coefs.csv")
+global_pvals <- read.csv("qap_results_pvals.csv")
+
+coefs_long <- pivot_longer(global_coefs, cols = -Classroom, 
+                           names_to = "Variable", values_to = "Estimate")
+pvals_long <- pivot_longer(global_pvals, cols = -Classroom, 
+                           names_to = "Variable", values_to = "P_Value")
+
+plot_data <- left_join(coefs_long, pvals_long, by = c("Classroom", "Variable"))
+
+plot_data$Significant <- ifelse(plot_data$P_Value < 0.05, "Yes (p < 0.05)", "No")
+
+plot_data %>%
+  ggplot(aes(x = factor(Classroom), y = Estimate, color = Significant)) +
+  geom_point(size = 3) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  facet_wrap(~ Variable, scales = "free_y") +
+  coord_flip() + # Flips to a true caterpillar style
+  theme_minimal() +
+  labs(title = "MR-QAP Coefficients Across 8 Classrooms",
+       x = "Classroom ID", y = "Coefficient value estimate")
+```
+We can here see the values for all coefficient across the different classrooms.
+
+## (5)
+
+- (1) Friendship from W1 - The results generalize pretty with the coefficients staying significant and positive across all classrooms
+- (2.i) Literacy receiver - The results are insignificant across all classrooms
+- (2.ii) Gender match - The results are significant across almost all classrooms and the coefficients are always positive. This suggest that our conclusion (that having the same gender is positively correlated with friendship in W2) should generalize.
+- (2.iii) HISEI sender - The results are almost always insignificant. Whenever they are significant, they are very close to zero. We can't say for sure whether the hypothesis is true or not.
 
 # Task 3
+
 TODO

@@ -89,17 +89,17 @@ run_qap_for_classroom <- function(class_id, attr_raw, base_path = "./Lintner/") 
   
   row_coef <- data.frame(
     Classroom = class_id,
-    W1_Baseline = ests[2],
-    Literacy_Alter = ests[3],
+    Friendship_from_W1 = ests[2],
+    Literacy_Sender = ests[3],
     Gender_Match = ests[4],
-    HISEI_Ego = ests[5]
+    HISEI_Sender = ests[5]
   )
   row_pval <- data.frame(
     Classroom = class_id,
-    W1_Baseline = pvals[2],
-    Literacy_Alter = pvals[3],
+    Friendship_from_W1 = pvals[2],
+    Literacy_Receiver = pvals[3],
     Gender_Match = pvals[4],
-    HISEI_Ego = pvals[5]
+    HISEI_Sender = pvals[5]
   )
   
   global_coefs <<- rbind(global_coefs, row_coef)
@@ -126,3 +126,6 @@ all_results <- lapply(all_classrooms, function(cid) {
   cat("Running analysis for classroom:", cid, "...\n")
   run_qap_for_classroom(class_id = cid, attr_raw = attr_raw)
 })
+
+write.csv(global_coefs, "qap_results_coefs.csv", row.names = FALSE)
+write.csv(global_pvals, "qap_results_pvals.csv", row.names = FALSE)
