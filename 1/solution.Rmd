@@ -91,4 +91,88 @@ We can here see the values for all coefficient across the different classrooms.
 
 # Task 3
 
+## (1)
+We can see that the network correlation coefficient is estimated to be around $0.85$ with a p-value of $0$, which makes it significant. Therefore, only taking W2 friendship into account, we can say that students tend to mark friends people with similar literacy scores.
+
+## (2) & (3)
+When we run the model with the additional variables, we get the following estimates:
+```{r, echo=FALSE, message=FALSE}
+library(knitr)
+library(dplyr)
+library(tidyr)
+
+coefs_df <- read.csv("nam_results_coefs.csv")
+pvals_df <- read.csv("nam_results_pvals.csv")
+
+table_10 <- coefs_df %>%
+  filter(Classroom == 10 | Classroom == "10") %>%
+  pivot_longer(cols = -Classroom, names_to = "Variable", values_to = "Estimate") %>%
+  left_join(
+    pvals_df %>%
+      filter(Classroom == 10 | Classroom == "10") %>%
+      pivot_longer(cols = -Classroom, names_to = "Variable_P", values_to = "P_Value") %>%
+      mutate(Variable = gsub("_pval$", "", Variable_P)),
+    by = c("Classroom", "Variable")
+  ) %>%
+  select(Variable, Estimate, P_Value)
+
+table_10$Variable <- recode(table_10$Variable,
+  "Intercept" = "Intercept",
+  "Gender_Female" = "Gender (Female)",
+  "HISEI" = "HISEI",
+  "Rho_Network" = "Network Autocorrelation (rho)"
+)
+
+# 5. Render the table
+kable(table_10, 
+      caption = "Extracted Results for Classroom 10",
+      align = c("l", "r", "r", "c"))
+```
+We can see that all the coefficients are significant at the 5% significance level, therefore we can interpret them like so:
+
+- Being a female (all other things staying the same) leads to a better literacy score. The estimated increase is around $20.88$.
+- Having a higher HISEI score (all other things staying the same) leads to a better literacy score. 
+- The network autocorrelation coefficient is now negative. In (1) it was estimated to be positive. This means that in the current model it is observed that people tend to make friends with others with different literacy score (higher or lower). The autocorrelation hypothesis is therefore suggested by the data. 
+
+## (4)
 TODO
+
+## (5)
+```{r, echo=FALSE, message=FALSE}
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+
+global_nam_coefs <- read.csv("nam_results_coefs.csv")
+global_nam_pvals <- read.csv("nam_results_pvals.csv")
+
+coefs_long <- pivot_longer(global_nam_coefs, cols = -Classroom, 
+                           names_to = "Variable", values_to = "Estimate")
+
+pvals_long <- pivot_longer(global_nam_pvals, cols = -Classroom, 
+                           names_to = "Variable_P", values_to = "P_Value") %>%
+  mutate(Variable = gsub("_pval$", "", Variable_P)) %>%
+  select(-Variable_P)
+
+plot_data <- left_join(coefs_long, pvals_long, by = c("Classroom", "Variable"))
+
+plot_data$Significant <- ifelse(plot_data$P_Value < 0.05, "Yes (p < 0.05)", "No")
+
+plot_data %>%
+  ggplot(aes(x = factor(Classroom), y = Estimate, color = Significant)) +
+  geom_point(size = 3) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  # Using free_x because coord_flip switches the axes
+  facet_wrap(~ Variable, scales = "free_x", ncol=2) + 
+  coord_flip() + 
+  theme_minimal() +
+  scale_color_manual(values = c("No" = "gray70", "Yes (p < 0.05)" = "#D55E00")) +
+  theme(panel.spacing = unit(2, "lines")) +
+  labs(title = "NAM Coefficients Across 8 Classrooms",
+       subtitle = "Dependent Variable: Ending Literacy Score",
+       x = "Classroom ID", 
+       y = "Coefficient Estimate",
+       color = "Significance")
+```
+
+We can see that our results do not look very generalizable and that classroom 10 turns out to be an outlier. Observing the other classrooms, we can see that almost every time the coefficients are non-significant, which means that we cannot draw the same conclusions for other classrooms. 
