@@ -1,0 +1,303 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+]{article}
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Network modelling - Assignmen 1 - Group 24},
+  pdfauthor={Andrin \ldots{}; Joshua \ldots{}; Lia \ldots{}; Stoyan Malinin},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Network modelling - Assignmen 1 - Group 24}
+\author{Andrin \ldots{} \and Joshua \ldots{} \and Lia
+\ldots{} \and Stoyan Malinin}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Task 1}\label{task-1}
+
+TODO
+
+\section{Task 2}\label{task-2}
+
+\textbf{TODO:} Think about whether to use one-sided or two sided tests
+to report significance
+
+\subsection{(1)}\label{section}
+
+After running the QAP logistic regression, we see a slope coefficient of
+2.93 with a p-value of 0.00. Therefore the result is significant and we
+can state that friendship in W1 is positively correlated with friendship
+in W2.
+
+\subsection{(2)}\label{section-1}
+
+The values are defined as follows:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{literacyReceiver }\OtherTok{\textless{}{-}} \FunctionTok{matrix}\NormalTok{(attr}\SpecialCharTok{$}\NormalTok{literacy\_end, }\FunctionTok{length}\NormalTok{(ids), }\FunctionTok{length}\NormalTok{(ids), }\AttributeTok{byrow =} \ConstantTok{TRUE}\NormalTok{) }\CommentTok{\# (i)}
+\NormalTok{sameGender }\OtherTok{\textless{}{-}} \FunctionTok{outer}\NormalTok{(attr}\SpecialCharTok{$}\NormalTok{gender, attr}\SpecialCharTok{$}\NormalTok{gender, }\StringTok{"=="}\NormalTok{) }\SpecialCharTok{*} \DecValTok{1} \CommentTok{\# (ii)}
+\NormalTok{hiseiSender }\OtherTok{\textless{}{-}} \FunctionTok{matrix}\NormalTok{(attr}\SpecialCharTok{$}\NormalTok{HISEI, }\FunctionTok{length}\NormalTok{(ids), }\FunctionTok{length}\NormalTok{(ids), }\AttributeTok{byrow =} \ConstantTok{FALSE}\NormalTok{) }\CommentTok{\# (iii)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{itemize}
+\tightlist
+\item
+  For (i) we create a matrix where each column is filled with the
+  literacy score of the corresponding student.
+\item
+  For (ii) we create a matrix with one in case of a gender match, and
+  zero otherwise.
+\item
+  For (iii) we create a matrix where each row is filled with the HISEI
+  score of each student
+\end{itemize}
+
+\subsection{(3)}\label{section-2}
+
+Here are the coefficients for the regressors together with the
+corresponding p-values
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Name & Coefficient & p-value \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Friendship W1 & 2.318175 & 0.0000 \\
+Literacy receiver & 0.0163386306 & 0.1282 \\
+Same gender & 1.8688700 & 0.0000 \\
+HISEI sender & 0.0290319336 & 0.1752 \\
+\end{longtable}
+
+Here are the corresponding interpretations (for the 5\% significance
+level):
+
+\begin{itemize}
+\tightlist
+\item
+  The coefficient from (i) is insignificant, therefore we cannot confirm
+  that higher literacy scores are associated with more friendship
+  nominations received.
+\item
+  The coefficient from (ii) is positive and significant, so we can
+  confirm the statement that having the same gender increases the
+  likelihood of having a friendship nomination (while everything else
+  stays the same).
+\item
+  The coefficient from (iii) is insignificant, so we cannot confirm the
+  statement that higher HISEI values are associated with more friendship
+  nominations send.
+\end{itemize}
+
+\emph{Note: Insignificant coefficients mean that we cannot reject the
+null hypothesis that there is no correlation (the coefficient is 0).}
+
+\subsection{(4)}\label{section-3}
+
+\pandocbounded{\includegraphics[keepaspectratio]{solution_files/figure-latex/unnamed-chunk-2-1.pdf}}
+We can here see the values for all coefficient across the different
+classrooms.
+
+\subsection{(5)}\label{section-4}
+
+\begin{itemize}
+\tightlist
+\item
+  \begin{enumerate}
+  \def\labelenumi{(\arabic{enumi})}
+  \tightlist
+  \item
+    Friendship from W1 - The results generalize pretty with the
+    coefficients staying significant and positive across all classrooms
+  \end{enumerate}
+\item
+  (2.i) Literacy receiver - The results are insignificant across all
+  classrooms
+\item
+  (2.ii) Gender match - The results are significant across almost all
+  classrooms and the coefficients are always positive. This suggest that
+  our conclusion (that having the same gender is positively correlated
+  with friendship in W2) should generalize.
+\item
+  (2.iii) HISEI sender - The results are almost always insignificant.
+  Whenever they are significant, they are very close to zero. We can't
+  say for sure whether the hypothesis is true or not.
+\end{itemize}
+
+\section{Task 3}\label{task-3}
+
+\subsection{(1)}\label{section-5}
+
+We can see that the network correlation coefficient is estimated to be
+around \(0.85\) with a p-value of \(0\), which makes it significant.
+Therefore, only taking W2 friendship into account, we can say that
+students tend to mark friends people with similar literacy scores.
+
+\subsection{(2) \& (3)}\label{section-6}
+
+When we run the model with the additional variables, we get the
+following estimates:
+
+\begin{longtable}[]{@{}lrr@{}}
+\caption{Extracted Results for Classroom 10}\tabularnewline
+\toprule\noalign{}
+Variable & Estimate & P\_Value \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+Variable & Estimate & P\_Value \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Gender (Female) & 20.8824892 & 0.0046561 \\
+HISEI & 0.9727459 & 0.0000397 \\
+Network Autocorrelation (rho) & -0.9395290 & 0.0282669 \\
+\end{longtable}
+
+We can see that all the coefficients are significant at the 5\%
+significance level, therefore we can interpret them like so:
+
+\begin{itemize}
+\tightlist
+\item
+  Being a female (all other things staying the same) leads to a better
+  literacy score. The estimated increase is around \(20.88\).
+\item
+  Having a higher HISEI score (all other things staying the same) leads
+  to a better literacy score.
+\item
+  The network autocorrelation coefficient is now negative. In (1) it was
+  estimated to be positive. This means that in the current model it is
+  observed that people tend to make friends with others with different
+  literacy score (higher or lower). The autocorrelation hypothesis is
+  therefore suggested by the data.
+\end{itemize}
+
+\subsection{(4)}\label{section-7}
+
+TODO
+
+\subsection{(5)}\label{section-8}
+
+\pandocbounded{\includegraphics[keepaspectratio]{solution_files/figure-latex/unnamed-chunk-4-1.pdf}}
+
+We can see that our results do not look very generalizable and that
+classroom 10 turns out to be an outlier. Observing the other classrooms,
+we can see that almost every time the coefficients are non-significant,
+which means that we cannot draw the same conclusions for other
+classrooms.
+
+\end{document}

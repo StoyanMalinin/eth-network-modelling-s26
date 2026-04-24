@@ -1,3 +1,5 @@
+set.seed(161)
+
 library(sna)
 library(network)
 
@@ -10,59 +12,66 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 global_nam_coefs <- data.frame()
 global_nam_pvals <- data.frame()
+global_nam_ses <- data.frame()
 
 run_nam_for_classroom <- function(class_id, attr_raw, base_path = "./Lintner/") {
   file_w2 <- paste0(base_path, class_id, "_W2.csv")
-  net_w2 <- as.matrix(read.csv2(file_w2, row.names = 1))
+  net_w2 <- as.matrix(read.csv2(file_w2, row.names = 1, check.names = FALSE))
+  colnames(net_w2) <- gsub("^0", "", colnames(net_w2)) # Clean column names early
   
-  attr_raw_good_ids <- attr_raw$studentID[
+  w2_good_ids <- rownames(net_w2)[rowSums(is.na(net_w2)) < ncol(net_w2)]
+  
+  attr_base_ids <- attr_raw$studentID[
+    attr_raw$classroomID == as.numeric(class_id) & 
+      !is.na(attr_raw$literacy_end)
+  ]
+  ids_base <- intersect(attr_base_ids, w2_good_ids)
+  
+  attr_full_ids <- attr_raw$studentID[
     attr_raw$classroomID == as.numeric(class_id) & 
       !is.na(attr_raw$gender) & 
       !is.na(attr_raw$HISEI) & 
       !is.na(attr_raw$literacy_end)
   ]
-  
-  w2_good_ids <- rownames(net_w2)[rowSums(is.na(net_w2)) < ncol(net_w2)]
-  
-  ids <- intersect(attr_raw_good_ids, w2_good_ids)
-  attr <- attr_raw[attr_raw$studentID %in% ids, ]
-  attr <- attr[match(ids, attr$studentID), ]
-  
-  if (class_id == "10" | class_id == "12") {
-    colnames(net_w2) <- gsub("^X", "", colnames(net_w2))
-  } else {
-    colnames(net_w2) <- gsub("^X0", "", colnames(net_w2))  
-  }
-  
-  friendship_w2 <- net_w2[as.character(ids), as.character(ids)]
+  ids_full <- intersect(attr_full_ids, w2_good_ids)
   
   cat("\n======================================================\n")
   cat("             RESULTS FOR CLASSROOM:", class_id, "\n")
-  cat("             Valid students analyzed:", length(ids), "\n")
+  cat("             Valid students (Base Model):", length(ids_base), "\n")
+  cat("             Valid students (Full Model):", length(ids_full), "\n")
   cat("======================================================\n\n")
   
-  attr$gender_num <- ifelse(attr$gender == "female", 1, 0)
+  # --- Setup & Run BASE Model ---
+  attr_base <- attr_raw[attr_raw$studentID %in% ids_base, ]
+  attr_base <- attr_base[match(ids_base, attr_base$studentID), ]
+  attr_base$Intercept <- 1
   
-  W_w2 <- sweep(friendship_w2, 1, 
-                ifelse(rowSums(friendship_w2) == 0, 1, rowSums(friendship_w2)), 
-                FUN = "/")
-  
-  literacy_end <- attr$literacy_end
+  friendship_w2_base <- net_w2[as.character(ids_base), as.character(ids_base)]
+  W_w2_base <- sweep(friendship_w2_base, 1, 
+                     ifelse(rowSums(friendship_w2_base) == 0, 1, rowSums(friendship_w2_base)), 
+                     FUN = "/")
   
   cat("--- Base NAM Model (Network Autocorrelation Only) ---\n")
-  mod1 <- lnam(y = literacy_end, W1 = W_w2)
+  mod1 <- lnam(y = attr_base$literacy_end, x = as.matrix(attr_base$Intercept), W1 = W_w2_base)
   print(summary(mod1))
   
-  covars <- model.matrix(~ gender_num + HISEI, data = attr)
+  attr_full <- attr_raw[attr_raw$studentID %in% ids_full, ]
+  attr_full <- attr_full[match(ids_full, attr_full$studentID), ]
+  attr_full$gender_num <- ifelse(attr_full$gender == "female", 1, 0)
+  
+  friendship_w2_full <- net_w2[as.character(ids_full), as.character(ids_full)]
+  W_w2_full <- sweep(friendship_w2_full, 1, 
+                     ifelse(rowSums(friendship_w2_full) == 0, 1, rowSums(friendship_w2_full)), 
+                     FUN = "/")
+  
+  covars <- model.matrix(~ gender_num + HISEI, data = attr_full)
+  
   cat("\n--- Full NAM Model (with Gender and HISEI) ---\n")
-  mod2 <- lnam(y = literacy_end, x = covars, W1 = W_w2)
+  mod2 <- lnam(y = attr_full$literacy_end, x = covars, W1 = W_w2_full)
   print(summary(mod2))
   cat("\n\n")
   
-  # --- Extract Coefficients and P-values ---
-  # The lnam object stores estimates and standard errors directly
-  # We calculate the p-values manually using the Z-score
-  
+  # --- Extract Coefficients and P-values (From Full Model) ---
   # Exogenous variables (Intercept, gender_num, HISEI)
   betas <- mod2$beta
   beta_se <- mod2$beta.se
@@ -77,6 +86,7 @@ run_nam_for_classroom <- function(class_id, attr_raw, base_path = "./Lintner/") 
   
   row_coef <- data.frame(
     Classroom = class_id,
+    Intercept = betas[1],
     Gender_Female = betas[2],
     HISEI = betas[3],
     Rho_Network = rho
@@ -84,17 +94,28 @@ run_nam_for_classroom <- function(class_id, attr_raw, base_path = "./Lintner/") 
   
   row_pval <- data.frame(
     Classroom = class_id,
+    Intercept = beta_pvals[1],
     Gender_Female_pval = beta_pvals[2],
     HISEI_pval = beta_pvals[3],
     Rho_Network_pval = rho_pval
   )
   
+  row_se <- data.frame(
+    Classroom = class_id,
+    Intercept_se = beta_se[1],
+    Gender_Female_se = beta_se[2],
+    HISEI_se = beta_se[3],
+    Rho_Network_se = rho_se
+  )
+  
   global_nam_coefs <<- rbind(global_nam_coefs, row_coef)
   global_nam_pvals <<- rbind(global_nam_pvals, row_pval)
+  global_nam_ses <<- rbind(global_nam_ses, row_se) 
   
   return(list(
     classroom_id = class_id,
-    n_students = length(ids),
+    n_students_base = length(ids_base),
+    n_students_full = length(ids_full),
     model_base = mod1,
     model_full = mod2
   ))
@@ -117,5 +138,6 @@ all_nam_results <- lapply(all_classrooms, function(cid) {
 
 write.csv(global_nam_coefs, "nam_results_coefs.csv", row.names = FALSE)
 write.csv(global_nam_pvals, "nam_results_pvals.csv", row.names = FALSE)
+write.csv(global_nam_ses, "nam_results_se.csv", row.names = FALSE)
 
-cat("Analysis complete! Results saved to nam_results_coefs.csv and nam_results_pvals.csv.\n")
+cat("Analysis complete! Results saved to nam_results_coefs.csv, nam_results_pvals.csv, and nam_results_se.csv.\n")

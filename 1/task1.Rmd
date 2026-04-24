@@ -1,0 +1,224 @@
+---
+output:
+  pdf_document:
+    fig_caption: yes
+header-includes: 
+  - \renewcommand{\and}{\\}
+  - \usepackage{float}
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  error = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  fig.pos = "H",
+  out.width = "40%"
+)
+```
+
+# Task 1
+
+```{r calculations, include=FALSE}
+read_adj_matrix <- function(path) {
+  df <- read.csv2(path, row.names = 1, check.names = FALSE)
+  mat <- as.matrix(df)
+  storage.mode(mat) <- "numeric"
+  mat[is.na(mat)] <- 0
+  diag(mat) <- 0
+  mat
+}
+
+suppressPackageStartupMessages(library(sna))
+suppressPackageStartupMessages(library(network))
+
+obsMat <- read_adj_matrix("Lintner/10_W1.csv")
+
+n <- nrow(obsMat)
+m <- sum(obsMat)
+ndyads <- n * (n - 1) / 2
+
+dc <- dyad.census(obsMat)
+M <- as.numeric(dc[1, "Mut"])
+A <- as.numeric(dc[1, "Asym"])
+N <- as.numeric(dc[1, "Null"])
+
+p <- m / (n * (n - 1))
+
+pM <- M / ndyads
+pA <- A / ndyads
+pN <- N / ndyads
+
+pM_ind <- p^2
+pA_ind <- 2 * p * (1 - p)
+pN_ind <- (1 - p)^2
+
+d <- 9
+p_out <- d / (n - 1)
+p_mutual_out <- p_out^2
+
+set.seed(161)
+reps <- 5000
+
+cugRec <- cug.test(obsMat, grecip, cmode = "edges", reps = reps)
+cugInd <- cug.test(
+  obsMat,
+  centralization,
+  cmode = "edges",
+  FUN.arg = list(FUN = degree, cmode = "indegree"),
+  reps = reps
+)
+cugTrans <- cug.test(obsMat, gtrans, cmode = "dyad.census", reps = reps)
+
+recip_obs <- cugRec$obs.stat
+indeg_cent_obs <- cugInd$obs.stat
+trans_obs <- cugTrans$obs.stat
+
+p_rec <- cugRec$pgteobs
+p_ind <- cugInd$pgteobs
+p_ind_lte <- cugInd$plteobs
+p_trans <- cugTrans$pgteobs
+
+ngte_rec <- sum(cugRec$rep.stat >= cugRec$obs.stat)
+ngte_trans <- sum(cugTrans$rep.stat >= cugTrans$obs.stat)
+```
+
+## Data cleaning
+
+Starting from the adjacency matrix in `Lintner/10_W1.csv`, the following
+changes were made before analysis:
+
+- All self-ties were removed (diagonal entries set to 0).
+- Any missing entries were treated as absent ties (all `NA` values set to 0).
+
+## Given
+
+- Number of nodes: n = `r n`
+- Directed ties (excluding diagonal): m = `r m`
+- Dyad census: M = `r M` (mutual), A = `r A` (asymmetric), N = `r N` (null),
+  total dyads = n(n-1)/2 = `r ndyads`
+
+## (1) Tie probability
+
+> Choosing an ordered pair \((i,j)\) uniformly at random with \(i \neq j\),
+> there are \(n(n-1)\) possible directed ties.
+>
+> \[
+> p = \frac{m}{n(n-1)} = \frac{`r m`}{`r n` \cdot `r (n - 1)`} =
+> `r signif(p, 8)`
+> \]
+
+## (2) Dyad probabilities
+
+> Choosing an unordered dyad \(\{i,j\}\) uniformly at random, there are
+> \(n(n-1)/2\) dyads.
+>
+> \[
+> p_M = \frac{M}{n(n-1)/2} = \frac{`r M`}{`r ndyads`} = `r signif(pM, 8)`
+> \]
+> \[
+> p_A = \frac{A}{n(n-1)/2} = \frac{`r A`}{`r ndyads`} = `r signif(pA, 8)`
+> \]
+> \[
+> p_N = \frac{N}{n(n-1)/2} = \frac{`r N`}{`r ndyads`} = `r signif(pN, 8)`
+> \]
+
+## (3) Dyad probabilities under tie independence with \(P(\text{tie}) = p\)
+
+> If \(X_{ij}\) and \(X_{ji}\) are independent Bernoulli(\(p\)) within each
+> dyad \(\{i,j\}\), then:
+>
+> \[
+> p_M^{(ind)} = P(X_{ij}=1, X_{ji}=1) = p^2 = `r signif(pM_ind, 8)`
+> \]
+> \[
+> p_A^{(ind)} = P(\text{exactly one tie}) = 2p(1-p) = `r signif(pA_ind, 8)`
+> \]
+> \[
+> p_N^{(ind)} = P(\text{no ties}) = (1-p)^2 = `r signif(pN_ind, 8)`
+> \]
+
+## (4) Is tie independence reasonable here?
+
+> No: compared to the independence model, the observed network has much more
+> reciprocity (mutual dyads `r signif(pM, 4)` vs `r signif(pM_ind, 4)`) and
+> many fewer asymmetric dyads (`r signif(pA, 4)` vs `r signif(pA_ind, 4)`).
+>
+> This suggests dyad-level dependence: if \(i\) nominates \(j\), then \(j\) is
+> much more likely to nominate \(i\) than expected under independence.
+
+## (5) Outdegree model with \(d=9\) (directional independence)
+
+> If each node nominates exactly \(d=9\) friends and each potential receiver is
+> equally likely, then for any ordered pair \(i \neq j\):
+>
+> \[
+> P(i \to j) = \frac{d}{n-1} = \frac{`r d`}{`r (n - 1)`} = `r signif(p_out, 8)`
+> \]
+> \[
+> P(\text{mutual}) = \left(\frac{d}{n-1}\right)^2 = `r signif(p_mutual_out, 8)`
+> \]
+>
+> The mutual probability is close to the observed \(p_M\), but this model would
+> imply \(m = n \cdot d = `r n * d`\) ties, which is larger than observed.
+
+## (6) CUG tests
+
+### (6.1) Hypotheses + conditioning
+
+- `cug.test(obsMat, grecip, cmode="edges")` conditions on the number of edges
+  (m fixed) and tests whether reciprocity is extreme.
+- `cug.test(..., centralization, cmode="edges", FUN.arg=list(FUN=degree,
+  cmode="indegree"))` conditions on the number of edges and tests whether
+  in-degree centralization is extreme.
+- `cug.test(obsMat, gtrans, cmode="dyad.census")` conditions on the dyad census
+  (M, A, N fixed) and tests whether transitivity is extreme beyond what dyad-
+  level reciprocity alone explains.
+
+### (6.2) Results
+
+#### Reciprocity (edges-conditioned)
+
+> Observed reciprocity: `r signif(recip_obs, 6)`  
+> One-sided p-value \(P(X \ge Obs)\): `r p_rec` (`r ngte_rec` / `r reps`)
+
+```{r cug-recip-plot, echo=FALSE, fig.align='center', fig.cap="CUG test for reciprocity (cmode = edges)"}
+plot(cugRec)
+```
+
+> Interpretation: With observed reciprocity `r signif(recip_obs, 4)` and
+> \(P(X \ge Obs) = `r p_rec`\) (i.e., `r ngte_rec` out of `r reps` simulated
+> graphs reached or exceeded the observed value), reciprocity is much higher
+> than expected under an edges-only CUG null.
+
+#### In-degree centralization (edges-conditioned)
+
+> Observed in-degree centralization: `r signif(indeg_cent_obs, 6)`  
+> Tail probabilities: \(P(X \ge Obs)\) = `r p_ind`, \(P(X \le Obs)\) = `r p_ind_lte`
+
+```{r cug-indeg-plot, echo=FALSE, fig.align='center', fig.cap="CUG test for in-degree centralization (cmode = edges)"}
+plot(cugInd)
+```
+
+> Interpretation: The observed in-degree centralization (`r signif(indeg_cent_obs, 4)`)
+> is not extreme under an edges-only null (tail probabilities
+> \(P(X \ge Obs) = `r p_ind`\), \(P(X \le Obs) = `r p_ind_lte`\)). This is
+> consistent with “no strong evidence” of unusual centralization given \(m\).
+
+#### Transitivity (dyad-census-conditioned)
+
+> Observed transitivity: `r signif(trans_obs, 6)`  
+> One-sided p-value \(P(X \ge Obs)\): `r p_trans` (`r ngte_trans` / `r reps`)
+
+```{r cug-trans-plot, echo=FALSE, fig.align='center', fig.cap="CUG test for transitivity (cmode = dyad.census)"}
+plot(cugTrans)
+```
+
+> Interpretation: With observed transitivity `r signif(trans_obs, 4)` and
+> \(P(X \ge Obs) = `r p_trans`\) (i.e., `r ngte_trans` out of `r reps`
+> simulated graphs reached or exceeded the observed value), transitivity is
+> much higher than expected even after controlling for the dyad census (M, A, N).

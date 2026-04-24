@@ -1,0 +1,186 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# Task 3
+
+Note that an intercept (a constant equal to $1$) is added as an exogenous variable to all models. Also the gender variable is encoded as $0$ for male and $1$ for female.
+
+## (1)
+*Note: Data is cleaned by removing all students that either have a missing literacy score or missing friendship links.*
+
+We can see that the network autocorrelation coefficient is estimated to be around $-0.20$ with a p-value of around $0.71$, which makes it insignificant. We cannot reject the null hypothesis (that the coefficient is $0$) and cannot confirm the network autocorrelation hypothesis.
+
+## (2) & (3)
+*Note: Data is cleaned by removing all students that either have missing friendship links, a missing literacy score or missing data for the HISEI or gender.*
+
+When we run the model with the additional variables, we get the following estimates:
+```{r, echo=FALSE, message=FALSE}
+library(knitr)
+library(dplyr)
+library(tidyr)
+
+coefs_df <- read.csv("nam_results_coefs.csv")
+pvals_df <- read.csv("nam_results_pvals.csv")
+
+table_10 <- coefs_df %>%
+  filter(Classroom == 10 | Classroom == "10") %>%
+  pivot_longer(cols = -Classroom, names_to = "Variable", values_to = "Estimate") %>%
+  left_join(
+    pvals_df %>%
+      filter(Classroom == 10 | Classroom == "10") %>%
+      pivot_longer(cols = -Classroom, names_to = "Variable_P", values_to = "p-value") %>%
+      mutate(Variable = gsub("_pval$", "", Variable_P)),
+    by = c("Classroom", "Variable")
+  ) %>%
+  select(Variable, Estimate, "p-value")
+
+table_10$Variable <- recode(table_10$Variable,
+  "Intercept" = "Intercept",
+  "Gender_Female" = "Gender (Female)",
+  "HISEI" = "HISEI",
+  "Rho_Network" = "Network Autocorrelation (rho)"
+)
+
+# 5. Render the table
+kable(table_10, 
+      caption = "Extracted Results for Classroom 10",
+      align = c("l", "r", "r", "c"))
+```
+
+For the following analysis we work at the 5% confidence level and for each coefficient analyze the following hypotheses:
+
+$\bold{H_0}$: The coefficient is zero.
+
+$\bold{H_1}$: The coefficient is non-zero.
+
+- **Gender (female)** - The estimate is positive and significant. Therefore we can conclude that being female is correlated with a higher literacy score (all other things staying the same).
+- **HISEI** - The estimate is positive and significant. Therefore we can conclude that the HISEI score is positively correlated with a higher literacy score (all other things staying the same).
+- **Network Autocorrelation (rho)** - The estimate is negative and significant. We can therefore claim that people tend to nominate friends with different (lower or higher) literacy score.
+
+
+The difference in the autocorrelation coefficient can be attributed to the fact that more variables are added, which explain different parts of the literacy score. 
+
+Nonetheless, the data supports the autocorrelation hypothesis as both in **(1)** and **(2)** the results are significant. 
+
+## (4)
+We should first note that the models in Task 2 and 3 are fundamentally different. The one in task 2 tries to predict a dyadic attribute (friendship), while the one here is focused on a monadic attribute (literacy score).
+
+- **HISEI: Academic Driver vs. Socially Neutral** - The most prominent difference lies in the role of socioeconomic status (HISEI). In the **NAM** model, **HISEI** is a highly significant predictor of literacy, explaining why students achieve different scores. However, in the **MR-QAP** model, the HISEI sender effect is not significant. This suggests that, while family background strongly dictates a student’s academic "resource" level, it does not influence their social "expansiveness" - high-status students are no more likely to send nominations than their peers.
+- **Gender: Social Boundary vs. Academically Neutral** - The effect of gender is significant and positive in both cases. The conclusions are different, though. In the **MR-QAP** model we conclude that being of the same gender increases the chance of friendship, while the **NAM** model tells us that being a female is correlated with a higher literacy score.
+- **The Role of the Network: Stability vs. Influence** - The network autocorrelation coefficients in both cases are significant. Their implications are very different, though. In the **MR-QAP** model the coefficient is positive, which indicates that the network structure is mostly preserved between waves 1 and 2. In the **NAM** model, however, the negative coefficient tells us that people tend to make friends with contrasting literacy scores.
+
+## (5) & (6)
+```{r, echo=FALSE, message=FALSE}
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+
+# 1. Read in the data (assuming you create a third file for Standard Errors)
+global_nam_coefs <- read.csv("nam_results_coefs.csv")
+global_nam_pvals <- read.csv("nam_results_pvals.csv")
+global_nam_ses   <- read.csv("nam_results_se.csv")
+
+# 2. Pivot all datasets to long format
+coefs_long <- pivot_longer(global_nam_coefs, cols = -Classroom, 
+                           names_to = "Variable", values_to = "Estimate")
+
+pvals_long <- pivot_longer(global_nam_pvals, cols = -Classroom, 
+                           names_to = "Variable_P", values_to = "P_Value") %>%
+  mutate(Variable = gsub("_pval$", "", Variable_P)) %>%
+  select(-Variable_P)
+
+ses_long <- pivot_longer(global_nam_ses, cols = -Classroom, 
+                         names_to = "Variable_SE", values_to = "Std_Error") %>%
+  mutate(Variable = gsub("_se$", "", Variable_SE)) %>% # Adjust this regex based on your column names
+  select(-Variable_SE)
+
+# 3. Join the data together
+plot_data <- coefs_long %>%
+  left_join(pvals_long, by = c("Classroom", "Variable")) %>%
+  left_join(ses_long, by = c("Classroom", "Variable"))
+
+# 4. Calculate Confidence Intervals and Significance
+plot_data <- plot_data %>%
+  mutate(
+    Significant = ifelse(P_Value < 0.05, "Yes (p < 0.05)", "No"),
+    CI_Lower = Estimate - (1.96 * Std_Error),
+    CI_Upper = Estimate + (1.96 * Std_Error)
+  )
+
+# 5. Plotting
+plot_data %>%
+  ggplot(aes(x = factor(Classroom), y = Estimate, color = Significant)) +
+  
+  # Add the error bars first so the points sit on top of them
+  # The 'width' argument creates the horizontal caps on the bars (|--o--|)
+  geom_errorbar(aes(ymin = CI_Lower, ymax = CI_Upper), width = 0.2, linewidth = 0.8) +
+  
+  # Add the points
+  geom_point(size = 3) +
+  
+  # Add the red dashed line at 0 (matching your reference image)
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  
+  facet_wrap(~ Variable, scales = "free_y", ncol=2) + 
+  theme_minimal() +
+  scale_color_manual(values = c("No" = "gray50", "Yes (p < 0.05)" = "#D55E00")) +
+  theme(panel.spacing = unit(2, "lines")) +
+  labs(title = "Caterpillar Plot of NAM Coefficients",
+       subtitle = "95% Confidence Intervals per Classroom",
+       x = "Classroom ID", 
+       y = "Estimate of Rho (Coefficient)",
+       color = "Significance")
+```
+
+- **Gender** - The effect is only significant in classroom 10.
+- **HISEI** - The effect is only significant in classrooms 1 and 10.
+- **Network autocorrelation** - The effect is only significant in classroom 10.
+We can see that the results that we got from classroom 10, despite being significant, do not generalize to other classrooms. This can be explained either by some uniqueness in classroom 10 or due to the relatively small sample size (only around 15-20 students per classroom).
+
+# Appendix
+## Task 3
+### Results across all classrooms
+```{r, echo=FALSE, message=FALSE}
+library(knitr)
+library(dplyr)
+library(tidyr)
+
+# 1. Read the data
+coefs_df <- read.csv("nam_results_coefs.csv")
+pvals_df <- read.csv("nam_results_pvals.csv")
+
+# 2. Pivot and merge for ALL classrooms
+table_all <- coefs_df %>%
+  pivot_longer(cols = -Classroom, names_to = "Variable", values_to = "Estimate") %>%
+  left_join(
+    pvals_df %>%
+      pivot_longer(cols = -Classroom, names_to = "Variable_P", values_to = "p-value") %>%
+      mutate(Variable = gsub("_pval$", "", Variable_P)) %>%
+      select(-Variable_P), # Drop the temporary column before joining
+    by = c("Classroom", "Variable")
+  ) %>%
+  # Keep Classroom in the selection
+  select(Classroom, Variable, Estimate, `p-value`) %>%
+  # Optional but recommended: Sort by Classroom, then keep variables in order
+  arrange(Classroom, match(Variable, c("Intercept", "Gender_Female", "HISEI", "Rho_Network")))
+
+# 3. Clean up the variable names
+table_all$Variable <- recode(table_all$Variable,
+  "Intercept" = "Intercept",
+  "Gender_Female" = "Gender (Female)",
+  "HISEI" = "HISEI",
+  "Rho_Network" = "Network Autocorrelation (rho)"
+)
+
+# 4. Render the table
+kable(table_all, 
+      caption = "Extracted NAM Results for All Classrooms",
+      align = c("c", "l", "r", "r"),
+      digits = 3) # Rounds the numeric columns to 3 decimal places for a cleaner look
+```
+
+### Code instructions
+In order to properly produce these results and that part of the document, one has to first successfully run the script `3.R` and the `Lintner/` folder should be in the same directory as it.  
