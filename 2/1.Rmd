@@ -1,0 +1,243 @@
+---
+title: 'Task 1'
+output: pdf_document
+---
+
+```{r, echo=FALSE, error=FALSE, warning=FALSE, message=FALSE}
+library(ergm)
+library(network)
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+# (1)
+## i
+The difference ($x_\text{after} - x_\text{before}$) is $\delta_\text{GWD}(x, \alpha) = (1 - e^{-\alpha})^k$.
+
+## ii
+```{r, echo=FALSE}
+# Load required libraries
+library(ggplot2)
+
+# 1. Define the derived change statistic formula
+calc_delta_gwd <- function(k, alpha) {
+  return((1 - exp(-alpha))^k)
+}
+
+# 2. Set up parameters
+k_max <- 10 # Adjust this to match the max out-degree of the Glasgow network
+k_range <- 0:k_max 
+
+# Vectors for decay values
+alphas_neg <- c(-1, -0.5)
+alphas_nonneg <- c(0, 0.1, 0.2, 0.3, 0.5, log(2), 1, 2, 3)
+
+# 3. Create individual plots for NEGATIVE decay values
+
+# Plot for alpha = -1
+df_neg1 <- data.frame(k = k_range, delta = calc_delta_gwd(k_range, -1))
+p_neg1 <- ggplot(df_neg1, aes(x = k, y = delta)) +
+  geom_line(color = "red") + 
+  geom_point(color = "red") +
+  labs(title = expression(paste("GWD Change Statistic for ", alpha, " = -1")),
+       x = "Current Out-Degree (k)",
+       y = expression(delta[GWD])) +
+  theme_minimal()
+print(p_neg1)
+
+# Plot for alpha = -0.5
+df_neg05 <- data.frame(k = k_range, delta = calc_delta_gwd(k_range, -0.5))
+p_neg05 <- ggplot(df_neg05, aes(x = k, y = delta)) +
+  geom_line(color = "blue") + 
+  geom_point(color = "blue") +
+  labs(title = expression(paste("GWD Change Statistic for ", alpha, " = -0.5")),
+       x = "Current Out-Degree (k)",
+       y = expression(delta[GWD])) +
+  theme_minimal()
+print(p_neg05)
+
+# 4. Create a single combined plot for NON-NEGATIVE decay values
+
+# Create a data frame spanning all combinations of k and non-negative alphas
+df_nonneg <- expand.grid(k = k_range, alpha = alphas_nonneg)
+df_nonneg$delta <- calc_delta_gwd(df_nonneg$k, df_nonneg$alpha)
+
+# Convert alpha to a factor so ggplot treats it as categorical data for coloring
+# We round the labels slightly just to make log(2) look clean in the legend
+df_nonneg$alpha_factor <- as.factor(round(df_nonneg$alpha, 3))
+
+p_nonneg <- ggplot(df_nonneg, aes(x = k, y = delta, color = alpha_factor, group = alpha_factor)) +
+  geom_line(linewidth = 0.8) + 
+  geom_point(size = 1.5) +
+  labs(title = "GWD Change Statistic for Non-Negative Decay Values",
+       x = "Current Out-Degree (k)",
+       y = expression(delta[GWD]),
+       color = expression(alpha)) +
+  theme_minimal() +
+  theme(legend.position = "right")
+print(p_nonneg)
+```
+
+## iii
+- $\alpha = -1$ - The marginal effect is close to zero and then it explodes in absolute value (oscillating between positive and negative). For popular people, the effect is massive (in absolute value).
+- $\alpha = -0.5$ - The marginal effect converges to zero oscillating between positive and negative. For popular people, the effect is very small.
+- $\alpha \geq 0$ - The marginal effect is positive and goes to zero as $k$ grows. For popular people, the marginal effect is positive, but it decays quickly to zero. The greater the alpha, the slower the decay is.
+
+## iv
+We would like to use a value for $\alpha$ that is high (maybe $\alpha \geq 0.5$), so that the marginal effect for already active people is non-negligible.
+
+# (2)
+## i
+```{r, eval=FALSE}
+model1 <- ergm(glasgow_net1 ~ edges)
+```
+
+```{r, echo=FALSE}
+model1 <- readRDS(file = "task1_model1.rds")
+summary(model1)
+```
+
+## ii
+### $\theta = -2$
+```{r, eval=FALSE}
+model2_neg2 <- ergm(glasgow_net1 ~ edges + offset(gwodegree(0.3, fixed = TRUE)), 
+                      offset.coef = -2)
+```
+### $\theta = +2$
+```{r, eval=FALSE}
+model2_neg2 <- ergm(glasgow_net1 ~ edges + offset(gwodegree(0.3, fixed = TRUE)), 
+                      offset.coef = +2)
+```
+
+## iii
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Load required libraries
+library(ergm)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Set a maximum out-degree to monitor (adjust if your observed network has higher degrees)
+max_k <- 12 
+
+# ==============================================================================
+# 1. SIMULATE NETWORKS
+# ==============================================================================
+# We simulate 100 networks for each model.
+# Note: While you can use simulate_formula(..., coef=coef(model)), using 
+# simulate() directly on the fitted model objects inherits the formula and 
+# coefficients automatically, which is safer and cleaner. 
+# We use monitor = ~odegree(0:max_k) to track degree counts in the output.
+
+# set.seed(123) # For reproducibility
+
+model2_neg2 <- readRDS(file="task1_model2_neg2.rds")
+model2_pos2 <- readRDS(file="task1_model2_pos2.rds")
+
+# Model 1 (Edges only)
+sim1 <- simulate(model1, nsim = 100, 
+                   monitor = ~odegree(0:max_k), output = "stats")
+
+# Model 2 (gwodegree coef = -2)
+sim2_neg2 <- simulate(model2_neg2, nsim = 100, 
+                       monitor = ~odegree(0:max_k), output = "stats")
+
+# Model 2 (gwodegree coef = +2)
+sim2_pos2 <- simulate(model2_pos2, nsim = 100, 
+                       monitor = ~odegree(0:max_k), output = "stats")
+
+
+# ==============================================================================
+# 2. DATA WRANGLING
+# ==============================================================================
+# Helper function to extract the odegree columns and pivot the data for ggplot
+format_stats <- function(stats_matrix, model_name) {
+  df <- as.data.frame(stats_matrix)
+  
+  # Extract only the monitored out-degree columns
+  odeg_cols <- grep("odegree", colnames(df), value = TRUE)
+  df <- df[, odeg_cols]
+  
+  # Rename columns to strictly the numeric degree (e.g., "odegree0" -> "0")
+  colnames(df) <- gsub("odegree", "", colnames(df))
+  
+  # Add simulation ID and reshape to long format
+  df$Simulation <- 1:nrow(df)
+  df_long <- pivot_longer(df, cols = -Simulation, 
+                          names_to = "OutDegree", values_to = "Count")
+  
+  df_long$Model <- model_name
+  df_long$OutDegree <- as.numeric(df_long$OutDegree)
+  
+  return(df_long)
+}
+
+# Format the data
+df1 <- format_stats(sim1, "M1 (Edges Only)")
+df2_neg2 <- format_stats(sim2_neg2, "M2 (gwodegree = -2)")
+df2_pos2 <- format_stats(sim2_pos2, "M2 (gwodegree = +2)")
+
+
+# ==============================================================================
+# 3. SINGLE DISCRETE BAR-VIOLINS
+# ==============================================================================
+library(dplyr)
+library(ggplot2)
+
+# Helper function to create one unified "Bar-Violin" per comparison
+plot_single_bar_violin <- function(df_ref, df_target, target_label, target_color) {
+  
+  # 1. Prepare the mirrored data
+  # M1 counts become negative (left side), Target counts remain positive (right side)
+  plot_data <- bind_rows(
+      df_ref %>% mutate(Side = "M1 (Edges Only)"),
+      df_target %>% mutate(Side = target_label)
+    ) %>%
+    group_by(Side, OutDegree) %>%
+    summarise(MeanCount = mean(Count), .groups = 'drop') %>%
+    mutate(DisplayCount = ifelse(grepl("M1", Side), -MeanCount, MeanCount))
+
+  # 2. Plotting the single unified shape
+  ggplot(plot_data, aes(x = OutDegree, y = DisplayCount, fill = Side)) +
+    # width = 1 makes the discrete bars touch, forming a solid "violin" silhouette
+    geom_col(width = 1, color = "white", linewidth = 0.1) + 
+    coord_flip() + 
+    # Use a single central axis at 0
+    geom_vline(xintercept = 0, color = "black", linewidth = 0.5) +
+    scale_fill_manual(values = setNames(c("gray70", target_color), 
+                                        c("M1 (Edges Only)", target_label))) +
+    # Make the X-axis labels (counts) absolute/positive
+    scale_y_continuous(labels = abs) + 
+    scale_x_continuous(breaks = 0:max_k) +
+    labs(title = paste("Bar-Violin Comparison: M1 vs", target_label),
+         subtitle = "Left: M1 (Edges) | Right: M2 (gwodegree)",
+         x = "Out-Degree (k)", 
+         y = "Mean Node Count",
+         fill = "Model Side") +
+    theme_minimal() +
+    theme(legend.position = "bottom",
+          panel.grid.minor = element_blank(),
+          # Center the plot around the spine
+          axis.title.x = element_text(hjust = 0.5))
+}
+
+# --- GENERATE THE TWO COMPARISONS ---
+
+# Comparison 1: M1 vs M2 (gwodegree = -2)
+p_neg_violin <- plot_single_bar_violin(df1, df2_neg2, 
+                                       "M2 (gwodegree = -2)", "#1f78b4")
+print(p_neg_violin)
+
+# Comparison 2: M1 vs M2 (gwodegree = +2)
+p_pos_violin <- plot_single_bar_violin(df1, df2_pos2, 
+                                       "M2 (gwodegree = +2)", "#e31a1c")
+print(p_pos_violin)
+```
+
+## iv
+The random network in M1 has an out-degree distribution that looks a lot like a normal distribution, which is expected as we only control for the number of edges.
+
+### $\theta_\text{GWD} = -2$
+Here the distribution is bimodal - out-degree values that are either $0$ (isolates) or "average" are more common than the other ones. The second mode is a bit higher than the mode in M1, since the expected density is fixed and these nodes "compensate" for the larger amount of isolates.
+
+### $\theta_\text{GWD} = +2$
+Here the distribution looks like a normal distribution, but much more narrow. That is because the network is rewarder for having higher degree values. The reason that the mode is not at a very high out-degree is that there are diminishing returns at $\alpha = 0.3$, so having a more "balanced allocation" is more preferable. 
