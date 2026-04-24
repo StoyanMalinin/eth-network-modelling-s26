@@ -1,15 +1,13 @@
-# 1. Install and load necessary packages
-# install.packages("ergm")
-# install.packages("network")
+---
+title: 'Task 2'
+output: pdf_document
+---
+
+```{r, echo=FALSE, error=FALSE, warning=FALSE, message=FALSE}
 library(ergm)
 library(network)
-library(parallel)
-
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
-# 2. Read the data
-# Note: Adjust 'header' and 'row.names' depending on the exact structure of your CSVs.
-# Assuming standard adjacency matrix format and a header row for demographics.
 f1_matrix <- as.matrix(read.csv("Glasgow/f1.csv", header = FALSE)) 
 demographics <- read.csv("Glasgow/demographic.csv", header = TRUE)
 
@@ -21,17 +19,22 @@ glasgow_net1 <- network(f1_matrix, directed = TRUE)
 # Gender is coded as 1=boy, 2=girl
 set.vertex.attribute(glasgow_net1, "gender", demographics$gender)
 
-# 4. Estimate the ERGM
-# We include 'edges' (density) and 'nodematch' for gender homophily
-model_1 <- ergm(glasgow_net1 ~ edges + nodematch("gender"))
+logdistance_matrix <- as.matrix(read.csv("Glasgow/logdistance.csv", header = FALSE))
+alcohol <- read.csv("Glasgow/alcohol.csv", header = TRUE) 
 
-saveRDS(model_1, file = "task2_model_1.rds")
+```
 
-# View the results
+# (1)
+
+```{r, echo=FALSE}
+model_1 <- readRDS(file = "task2_model_1.rds")
 summary(model_1)
+```
 
-# 5. Compute the conditional probability
-# Extract the estimated coefficients (theta values)
+-   Negative (and significant) edge coefficient - networks tend to be sparse
+-   Positive (and significant) homophily coefficient - networks tend to have homophily
+
+```{r, echo=FALSE}
 coefs <- coef(model_1)
 theta_edges <- coefs["edges"]
 theta_gender_match <- coefs["nodematch.gender"]
@@ -45,23 +48,15 @@ prob_same_gender <- exp(log_odds_same_gender) / (1 + exp(log_odds_same_gender))
 
 # Print the probability
 cat("Conditional probability of a tie between same-gender students:", prob_same_gender, "\n")
+```
 
-# 1. Read the additional control data
-logdistance_matrix <- as.matrix(read.csv("Glasgow/logdistance.csv", header = FALSE))
-alcohol <- read.csv("Glasgow/alcohol.csv", header = TRUE) 
+# (2)
 
-# 2. Add the new attributes to your existing network object (glasgow_net1)
-set.vertex.attribute(glasgow_net1, "age", demographics$age)
-
-# Assuming alcohol.csv has a column named 'alcohol' (adjust if named differently)
-set.vertex.attribute(glasgow_net1, "alcohol", alcohol$Wave.1) 
-
-# 3. Specify and estimate the comprehensive ERGM
-# We fix the decay parameters to 0.6 as suggested by your assignment note
+```{r, eval=FALSE}
 ergm_model_2_params <- glasgow_net1 ~ edges + 
   # Endogenous Hypotheses
   mutual + 
-  gwesp(0.2, fixed = TRUE) + 
+  gwesp(0.1, fixed = TRUE) + 
   
   # Exogenous Hypotheses: Gender
   nodeofactor("gender", levels = 1) + 
@@ -79,7 +74,6 @@ ergm_model_2_params <- glasgow_net1 ~ edges +
   # Basic Endogenous Controls (Stabilizers)
   gwidegree(0.6, fixed = TRUE) + 
   gwodegree(0.6, fixed = TRUE)
-
 noisy_model_2 <- ergm(
                 ergm_model_2_params,
                 # ERGMs with this many parameters can take a moment to compute
@@ -106,12 +100,15 @@ model_2 <- ergm(
     parallel.type = "PSOCK"
   )
 )
+```
 
-# View the results to check which hypotheses are supported
-summary(model_2)
+```{r, echo=FALSE}
+model_2 <- readRDS(file = "task2_model_2.rds")
+```
 
-saveRDS(model_2, file = "task2_model_2.rds")
+# (3)
 
+```{r, echo=FALSE}
 library(coda)
 
 # 2. Your model saves the data from all 8 cores in a list called "sample". 
@@ -120,12 +117,57 @@ single_thread_data <- model_2$sample[[1]]
 
 # 3. Plot the trace and density for this single thread
 plot(single_thread_data)
+```
 
+We see that the distributions are unimodal and mostly centered around 0. The traces oscillate around 0 without any patterns.
+
+```{r, echo=FALSE}
+# 2. Use the coda function 'autocorr()' to get the matrix of lag values
+single_thread_lags <- autocorr(single_thread_data)
+
+# 3. Print the results to your console
+print(single_thread_lags)
+```
+
+From the lags we see that the model explores the state space very well, since autocorrelation becomes very close to 0.
+
+# (4)
+
+```{r, eval=FALSE}
 model_2_gof <-  gof(
   model_2,
   GOF = ~ idegree + odegree + espartners + distance
 )
-saveRDS(model_2_gof, file = "task2_model_2_gof.rds")
-model_2_gof
+```
 
+```{r, echo=FALSE}
+model_2_gof <- readRDS(file = "task2_model_2_gof.rds")
+model_2_gof
+```
+From the summary table we see that the p-values are high (not all of them are significant on the 5%) level. This also indicates that the model fits well based on the statistics that it is trained on.
+
+```{r, echo=FALSE}
 ergm:::plot.gof(model_2_gof)
+```
+Plotting the auxiliary statistics shows us that the model explores networks with similar in- and out-degree distributions, but the explored networks are much less connected than the reference one. This can be seen in the `distance` and `espartners` diagrams.
+
+# (5)
+
+```{r, echo=FALSE}
+summary(model_2)
+```
+
+-   i - reciprocity is supported by data
+-   ii - transitivity (gwesp.OTP.fixed.0.1) is supported by the data
+-   iii, iv - cannot tell as the coefficients are insignificant
+-   v - the opposite is supported
+-   vi - supported
+-   vii - supported (negative coefficients, so the abs difference should be small)
+
+# (6)
+????
+
+# (7)
+- **H1** - children with similar literacy scores tend to become friends (literacy score homophily)
+- **H2** - Girls tend to receive more friend nominations than they send
+- **H3 (a bit unsure about this one)** - alcohol homophily is more prevalent in boys compared to girls
