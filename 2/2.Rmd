@@ -53,10 +53,14 @@ cat("Conditional probability of a tie between same-gender students:", prob_same_
 # (2)
 
 ```{r, eval=FALSE}
-ergm_model_2_params <- glasgow_net1 ~ edges + 
+ergm_model_2_params <- glasgow_net1 ~ 
+  # Model 1
+  edges + 
+  nodematch("gender") +
+  
   # Endogenous Hypotheses
   mutual + 
-  gwesp(0.1, fixed = TRUE) + 
+  gwesp(0.2, fixed = TRUE) + 
   
   # Exogenous Hypotheses: Gender
   nodeofactor("gender", levels = 1) + 
@@ -108,7 +112,7 @@ model_2 <- readRDS(file = "task2_model_2.rds")
 
 # (3)
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, fig.width=10, fig.height=8}
 library(coda)
 
 # 2. Your model saves the data from all 8 cores in a list called "sample". 
@@ -158,7 +162,7 @@ summary(model_2)
 ```
 
 -   i - reciprocity is supported by data
--   ii - transitivity (gwesp.OTP.fixed.0.1) is supported by the data
+-   ii - transitivity (*gwesp.OTP.fixed.0.2*) is supported by the data
 -   iii, iv - cannot tell as the coefficients are insignificant
 -   v - the opposite is supported
 -   vi - supported
@@ -168,6 +172,6 @@ summary(model_2)
 ????
 
 # (7)
-- **H1** - children with similar literacy scores tend to become friends (literacy score homophily)
-- **H2** - Girls tend to receive more friend nominations than they send
-- **H3 (a bit unsure about this one)** - alcohol homophily is more prevalent in boys compared to girls
+- **H1** - Children with similar literacy scores tend to become friends (literacy score homophily)
+- **H2** - Children with higher delinquency tend to send more friend nominations
+- **H3 (a bit unsure about this one)** - Alcohol homophily is more prevalent in boys compared to girls
