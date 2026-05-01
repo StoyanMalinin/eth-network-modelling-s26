@@ -1,0 +1,186 @@
+---
+title: 'Task 3'
+output: pdf_document
+---
+
+```{r, echo=FALSE, message=FALSE}
+library(RSiena)
+source("printSiena.R")
+```
+
+# (1)
+## (1.1)
+- Jaccard 1->2: 0.3036496
+- Jaccard 2-3: 0.3506686
+
+## (1.2)
+```{r, eval=FALSE}
+# 1. Create the initial effects object based on your data
+myeff <- getEffects(mydata)
+
+# 2. Add Endogenous Controls (Network Structure)
+# Note: outdegree (density) and recip (reciprocity) are already included by default
+myeff <- includeEffects(myeff, transTrip, cycle3)
+
+# 3. Add Exogenous Controls (Demographics)
+# Controlling for gender dynamics
+myeff <- includeEffects(myeff, egoX, altX, sameX, interaction1 = "gender")
+
+# Controlling for base alcohol tendencies (sender and receiver effects)
+myeff <- includeEffects(myeff, egoX, altX, interaction1 = "alcohol_covar")
+# (Optional) You can also add age controls if desired:
+# myeff <- includeEffects(myeff, simX, interaction1 = "age")
+
+# 4. Add Hypothesis Tests!
+# H(i): Popularity
+myeff <- includeEffects(myeff, inPop)
+
+# H(ii): Alcohol Similarity
+myeff <- includeEffects(myeff, simX, interaction1 = "alcohol_covar")
+
+# H(iii): Distance / Proximity
+myeff <- includeEffects(myeff, X, interaction1 = "distance")
+```
+
+## (1.3)
+```{r, echo=FALSE}
+model0 <- readRDS("task3_model0.rds")
+printSiena(model0)
+```
+
+```{r}
+t.conv <- apply(model0$sf, 2, mean) / apply(model0$sf, 2, sd)
+t.conv
+overall <- sqrt(t(apply(model0$sf, 2, mean)) %*% solve(cov(model0$sf)) %*% apply(model0$sf, 2, mean))
+overall
+```
+
+We can see that the model converges.
+
+## (1.4)
+```{r, echo=FALSE}
+gofEvId <- readRDS("task3_model0_gofEvId.rds")
+gofEvOd <- readRDS("task3_model0_gofEvOd.rds")
+gofEvGD <- readRDS("task3_model0_gofEvGD.rds")
+gofEvTC <- readRDS("task3_model0_gofEvTC.rds")
+plot(gofEvId)
+plot(gofEvOd)
+plot(gofEvGD)
+plot(gofEvTC, center = TRUE, scale = TRUE)
+```
+
+We can see that the model has good GOF in terms of in-degree distribution, but everything else is quite poor. This means that the model does not represent the data well.
+
+**From now on (for interpretation purposes), we pretend that the model has good GOF, so we can draw conclusions.**
+
+## (1.5)
+- i - The coefficient is negative and significant. We reject the hypothesis, since we observe the opposite effect.
+- ii - positive and significant - hypothesis is supported
+- iii - the coefficient is negative and significant - hypothesis is supported
+
+# (2)
+
+## (2.1)
+```{r, eval=FALSE}
+# =====================================================================
+# SELECTION PART (Network Evolution)
+# =====================================================================
+# Endogenous Controls
+myeff <- set_effect(myeff, list(transTrip, cycle3), depvar="friendship")
+
+# Exogenous Controls (Gender)
+myeff <- set_effect(myeff, list(egoX, altX, sameX), covar1="gender", depvar="friendship")
+
+# Hypothesis (i): Popularity -> Friendship
+myeff <- set_effect(myeff, list(inPop), depvar="friendship")
+
+# Hypothesis (ii): Alcohol Similarity -> Friendship (Homophily)
+# Note: covar1 is now targeting our new behavior variable "alcohol_beh"
+myeff <- set_effect(myeff, list(simX, egoX, altX), covar1="alcohol_beh", depvar="friendship")
+
+# Hypothesis (iii): Distance -> Friendship
+myeff <- set_effect(myeff, list(X), covar1="distance", depvar="friendship")
+
+
+# =====================================================================
+# INFLUENCE PART (Behavior Evolution)
+# =====================================================================
+# Note: RSiena automatically includes the 'linear' and 'quad' (shape) 
+# effects for behavior, which act as your basic endogenous controls.
+
+# Exogenous Control: Gender's effect on alcohol consumption
+# (It's good practice to control for basic demographics in behavior too)
+myeff <- set_effect(myeff, list(effFrom), covar1="gender", depvar="alcohol_beh")
+
+# Hypothesis (iv): Popularity -> Alcohol
+# Does indegree in the friendship network predict alcohol behavior?
+myeff <- set_effect(myeff, list(indeg), covar1="friendship", depvar="alcohol_beh")
+
+# Hypothesis (v): Assimilation / Social Influence
+# Do students adjust alcohol consumption to be similar to their friends?
+myeff <- set_effect(myeff, list(avSim), covar1="friendship", depvar="alcohol_beh")
+```
+
+```{r, echo=FALSE}
+modelCoev <- readRDS("task3_modelCoev.rds")
+```
+
+## (2.2)
+```{r}
+t.conv <- apply(model0$sf, 2, mean) / apply(model0$sf, 2, sd)
+t.conv
+overall <- sqrt(t(apply(model0$sf, 2, mean)) %*% solve(cov(model0$sf)) %*% apply(model0$sf, 2, mean))
+overall
+```
+The model converges.
+
+## (2.3)
+```{r}
+gofCoevId <- readRDS("task3_modelCoev_gofCoevId.rds")
+plot(gofCoevId)
+
+# Outdegree distribution
+gofCoevOd <- readRDS("task3_modelCoev_gofCoevOd.rds")
+plot(gofCoevOd)
+
+# Triad census
+gofCoevTC <- readRDS("task3_modelCoev_gofCoevTC.rds")
+plot(gofCoevTC)
+
+# Geodesic distance
+gofCoevGD <- readRDS("task3_modelCoev_gofCoevGD.rds")
+plot(gofCoevGD)
+
+# Behaviour distribution
+gofCoevBeh <- readRDS("task3_modelCoev_gofCoevBeh.rds")
+plot(gofCoevBeh)
+
+```
+
+GOF of in-degree distribution is ok, the rest is not good. The model does not represent the data very well.
+
+**We (again) assume that the model does assume the data, so we can interpret what we have**
+
+## (2.4)
+```{r}
+printSienaCoev(modelCoev)
+```
+
+- iv - coefficient is insignificant. cannot confirm hypothesis.
+- v - coefficient is positive and significant - confirm hypothesis
+
+## (2.5)
+We see both selection and influence effects:
+- Pupils with similar alcohol consumption become friends, but also friends change their alcohol consumption to be similar
+
+We also notice that these selection processes are also in place:
+- Students become friends with other popular students
+- Reciprocity
+
+## (3)
+- We can add `outActSqrt`. It is closely related to the out-degree distribution and should help us steer the model in the right direction
+- We can add `gwespFF` to control for the amount of shared partners. This will help us improve the distance distribution.
+
+## (4)
+- Students with many friends tend to increase or maintain alcohol consumption
+- Students tend to adjust their literacy score results towards the ones of their friends

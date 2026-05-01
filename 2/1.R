@@ -46,5 +46,8 @@ model2_pos2 <- ergm(glasgow_net1 ~ edges + offset(gwodegree(0.3, fixed = TRUE)),
 print("Summary for gwodegree coef = 2")
 summary(model2_pos2)
 
+model2_pos2 <- readRDS("task1_model2_pos2.rds")
+model2_pos2
+
 # Save the model
 saveRDS(model2_pos2, file = "task1_model2_pos2.rds")
