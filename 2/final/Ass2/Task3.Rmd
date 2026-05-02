@@ -150,7 +150,7 @@ knitr::include_graphics(c(
 
 ### (1.5) Hypothesis tests
 
-Parameter estimates and standard errors are provided in `task3_results/estimates_part1_network_only.csv`. Using the sign and the estimate-to-SE ratio for inference, we assess the hypotheses:
+Parameter estimates and standard errors are provided in `task3_results/estimates_part1_network_only.csv`. Using the sign and the p-value, we assess the hypotheses (at the 5% significance level):
 
 1. Popularity (students choose popular peers). This is operationalized via the indegree popularity effect (`inPop`). The estimate is negative (estimate = -0.080, SE = 0.020), and is statistically different from 0. In this specification, this implies that, conditional on the other effects in the model, actors are less likely to choose alters with higher indegree. Hence, the “choose popular peers” hypothesis is not supported (it is supported in the opposite direction). One plausible reason is that once transitivity and reciprocity are controlled for, and given the nomination cap, the remaining marginal attractiveness of already-popular pupils can be reduced.
 
@@ -194,7 +194,9 @@ conv2_line <- sum2[grepl("Overall maximum convergence ratio", sum2)][1]
 conv2 <- as.numeric(sub(".*ratio:\\s*", "", conv2_line))
 
 est2_eval_net <- subset(est2, dependent == "friendship" & type == "eval", select = c(effect, estimate, se, tconv))
+est2_eval_net$p_value <- 2 * (1 - pnorm(abs(est2_eval_net$estimate / est2_eval_net$se)))
 est2_eval_beh <- subset(est2, dependent == "alcohol" & type == "eval", select = c(effect, estimate, se, tconv))
+est2_eval_beh$p_value <- 2 * (1 - pnorm(abs(est2_eval_beh$estimate / est2_eval_beh$se)))
 
 knitr::kable(
   est2_eval_net,
@@ -242,7 +244,7 @@ knitr::include_graphics(c(
 
 ### (2.4) Hypothesis tests and comparison
 
-The key behavioural hypotheses are tested in the alcohol equation of the co-evolution model.
+The key behavioural hypotheses are tested in the alcohol equation of the co-evolution model. The following analysis is based on the 5% significance level.
 
 Hypothesis (iv) states that popular students tend to increase or maintain their level of alcohol consumption. We operationalize popularity by indegree in the friendship network, using the `indeg` effect in the alcohol equation. The estimate is positive but small relative to its standard error (estimate = 0.076, SE = 0.073). Therefore, this effect is not statistically distinguishable from zero. We do not find clear evidence that more popular students move toward, or remain at, higher alcohol consumption levels once the other behavioural controls are included.
 
