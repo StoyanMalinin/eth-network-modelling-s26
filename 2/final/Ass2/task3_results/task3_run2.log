@@ -1,0 +1,30 @@
+Jaccard indices written to task3_results/jaccard_indices.csv
+J(w1,w2) = 0.3036 
+J(w2,w3) = 0.3507 
+J(w1,w3) = 0.2341 
+
+  effectName            include fix   test  initialValue parm
+1 reciprocity           TRUE    FALSE FALSE          0   0   
+2 transitive triplets   TRUE    FALSE FALSE          0   0   
+3 3-cycles              TRUE    FALSE FALSE          0   0   
+4 indegree - popularity TRUE    FALSE FALSE          0   0   
+  effectName       include fix   test  initialValue parm
+1 gender_cov alter TRUE    FALSE FALSE          0   0   
+2 gender_cov ego   TRUE    FALSE FALSE          0   0   
+3 same gender_cov  TRUE    FALSE FALSE          0   0   
+  effectName         include fix   test  initialValue parm
+1 alcohol similarity TRUE    FALSE FALSE          0   0   
+  effectName  include fix   test  initialValue parm
+1 logdist_cov TRUE    FALSE FALSE          0   0   
+If you use this algorithm object, siena07 will create/use an output file Siena.txt .
+  effectName           include fix   test  initialValue parm
+1 alcohol linear shape TRUE    FALSE FALSE    0.34704   0   
+  effectName            include fix   test  initialValue parm
+1 alcohol average alter TRUE    FALSE FALSE          0   0   
+  effectName       include fix   test  initialValue parm
+1 alcohol indegree TRUE    FALSE FALSE          0   0   
+If you use this algorithm object, siena07 will create/use an output file Siena.txt .
+Note: some statistics are not plotted because their variance is 0.
+This holds for the statistic: 5.
+SAOM estimates saved to task3_results/*.rds
+GOF PDFs saved to task3_figures/

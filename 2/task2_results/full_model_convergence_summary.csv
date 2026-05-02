@@ -1,0 +1,2 @@
+"mcmle_iterations","mcmle_maxit","mcmle_hit_maxit","mcmle_failure","mcmle_termination","mcmle_confidence","mcmle_conv_min_pval","max_abs_score","max_abs_coef_change_last_window","last_step_length"
+23,60,FALSE,FALSE,"confidence",0.99,0.5,0.406993247725474,0.035797954339186,1

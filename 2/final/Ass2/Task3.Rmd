@@ -1,0 +1,293 @@
+---
+title: "Task 3 — Estimation and interpretation of SAOMs"
+output:
+  html_document:
+    fig_caption: yes
+  pdf_document:
+    latex_engine: xelatex
+    fig_caption: yes
+header-includes:
+  - \renewcommand{\and}{\\}
+  - \usepackage{float}
+  - \sloppy
+editor_options:
+  markdown:
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  error = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  fig.pos = "H",
+  out.width = "40%"
+)
+```
+To reproduce results, run:
+
+```{bash, eval=FALSE}
+Rscript Task3.R
+```
+
+This writes results to `task3_results/` and figures to `task3_figures/`.
+
+---
+
+## (1) Friendship network as the only dependent variable
+
+### (1.1) Jaccard index
+
+We compute the Jaccard index of edge overlap between two waves:
+
+\[
+J(x^{(t)},x^{(t+1)}) = \frac{|E^{(t)}\cap E^{(t+1)}|}{|E^{(t)}\cup E^{(t+1)}|},
+\]
+
+where \(E^{(t)}\) is the set of directed friendship nominations at time \(t\).
+
+Empirical values (from `task3_results/jaccard_indices.csv`):
+
+\(J(\text{Wave 1},\text{Wave 2}) \approx 0.304\)
+
+\(J(\text{Wave 2},\text{Wave 3}) \approx 0.351\)
+
+(for reference) \(J(\text{Wave 1},\text{Wave 3}) \approx 0.234\)
+
+Interpretation: consecutive-wave overlaps around 0.30–0.35 indicate substantial tie turnover but still enough stability to fit a dynamic model, the much smaller Wave1–Wave3 overlap is expected because it spans a longer period.
+
+---
+
+### (1.2) Model specification
+
+We specify a SAOM for the friendship network evolution including:
+
+Basic endogenous controls (standard in friendship SAOMs):
+
+1. Density (outdegree) baseline (included by default by `getEffects()`)
+2. Reciprocity (`recip`)
+3. Triadic closure / transitivity (`transTrip`)
+
+Additional endogenous control:
+
+1. Cyclic closure (`cycle3`) to distinguish cyclic from transitive closure
+
+Hypotheses:
+
+1. Popularity: students tend to choose popular peers (operationalized as indegree popularity, `inPop`).
+2. Alcohol homophily: students tend to choose peers with similar alcohol (operationalized as alcohol similarity, `simX` with alcohol).
+3. Proximity: students living closer are more likely to connect (operationalized as the dyadic covariate `logdistance`, `X` with `logdistance`). Because this is the logarithm of distance, support for “living nearby” corresponds to a negative coefficient (greater distance implies lower tie probability).
+
+Exogenous controls:
+
+1. Gender effects: same gender (`sameX`) and sender/receiver gender (`egoX`, `altX`).
+
+---
+
+### (1.3) Estimation and convergence
+
+The model was estimated with `RSiena::siena07()` using `n3=3000` iterations. Convergence is assessed using RSiena’s maximum convergence ratio and the per-parameter convergence t-ratios. A common rule of thumb is that the overall maximum convergence ratio should be below 0.25 and that the absolute convergence t-ratios should be close to 0.
+
+For the fitted selection-only model, the overall maximum convergence ratio is 0.141 (see `task3_results/summary_part1_network_only.txt`), comfortably below 0.25. The convergence t-ratios reported for the individual parameters are all small in magnitude (well below 0.1), indicating that the final phase of the algorithm produced stable estimating equations rather than systematic drift in any single effect. This suggests that the model estimation is reliable enough for interpretation.
+
+The estimated rate parameters are about 11.0 (period 1) and 9.0 (period 2), indicating more opportunities for tie change in the earlier period than the later one. This is consistent with the fact that the networks exhibit non-trivial turnover (Jaccard overlaps around 0.30–0.35 between adjacent waves), so the actor-oriented process has sufficient changes to learn from.
+
+The estimated object is saved as `task3_results/ans_part1_network_only.rds`.
+The full parameter table is saved as `task3_results/estimates_part1_network_only.csv`.
+
+```{r part1_convergence_table, echo=FALSE}
+est1 <- read.csv("task3_results/estimates_part1_network_only.csv")
+sum1 <- readLines("task3_results/summary_part1_network_only.txt", warn = FALSE)
+conv1_line <- sum1[grepl("Overall maximum convergence ratio", sum1)][1]
+conv1 <- as.numeric(sub(".*ratio:\\s*", "", conv1_line))
+
+est1_eval <- subset(est1, type == "eval", select = c(effect, estimate, se, tconv))
+knitr::kable(
+  est1_eval,
+  booktabs = FALSE,
+  digits = 3,
+  caption = paste0(
+    "Part (1) evaluation effects: estimates, standard errors, and convergence t-ratios. ",
+    "Overall maximum convergence ratio = ",
+    format(conv1, digits = 3)
+  )
+)
+```
+
+---
+
+### (1.4) Goodness of fit
+
+
+The goodness of fit of the network-only SAOM is evaluated with four auxiliary statistics: the outdegree distribution, the indegree distribution, the geodesic distance distribution, and the triad census. These statistics assess whether networks simulated from the fitted model reproduce important structural features of the observed friendship network that are not fully summarized by the parameter table. The results indicate mixed goodness of fit. 
+
+1. The indegree distribution is reproduced reasonably well, with a joint GOF p-value of 0.67. In the indegree plot, the observed red line lies mostly within the simulated distribution, indicating that the model captures the distribution of received friendship nominations relatively well. This suggests that the model is reasonably successful in reproducing the popularity structure of the network.
+
+2. The outdegree distribution has a joint p-value that rounds to 0. In the outdegree plot, the observed values deviate systematically from the simulated distributions, especially for low and medium outdegrees. This means that the model does not fully reproduce how many friendship nominations students send.
+
+3. The geodesic distance distribution also fits poorly, with a joint p-value that rounds to 0. The plot shows that the observed network has a different distance profile from the simulated networks: the observed counts are lower than expected at some short distances and higher at some longer distances. This indicates that the model does not fully reproduce the global connectivity and clustering structure of the friendship network.
+
+4. The triad census also shows poor fit. The plot is dominated by the very large number of empty triads, which is normal in a sparse network and compresses the remaining triad types visually. The joint p-value rounds to 0, indicating that the fitted model does not adequately reproduce the distribution of local three-node configurations. Thus, even though the model includes reciprocity, transitive triplets, and cyclic closure, it still misses some aspects of the observed triadic structure.
+
+Overall, the fitted model captures the indegree/popularity distribution reasonably well, but it performs poorly for sender activity, geodesic distances, and detailed triadic structure. Therefore, the model is useful for interpreting the main estimated effects, but the GOF results suggest that it is an incomplete description of the network-generating process. Additional mechanisms, such as stronger activity heterogeneity, alternative closure specifications, or further opportunity-structure covariates, could improve the fit to these auxiliary statistics.
+
+```{r part1_gof_plots, echo=FALSE, out.width='49%', fig.show='hold'}
+knitr::include_graphics(c(
+  "task3_figures/gof_part1_network_only_outdegree.png",
+  "task3_figures/gof_part1_network_only_indegree.png",
+  "task3_figures/gof_part1_network_only_geodesic.png",
+  "task3_figures/gof_part1_network_only_triad.png"
+))
+```
+
+```{r part1_gof_pagebreak, echo=FALSE, results='asis'}
+```
+
+---
+
+### (1.5) Hypothesis tests
+
+Parameter estimates and standard errors are provided in `task3_results/estimates_part1_network_only.csv`. Using the sign and the estimate-to-SE ratio for inference, we assess the hypotheses:
+
+1. Popularity (students choose popular peers). This is operationalized via the indegree popularity effect (`inPop`). The estimate is negative (estimate = -0.080, SE = 0.020), and is statistically different from 0. In this specification, this implies that, conditional on the other effects in the model, actors are less likely to choose alters with higher indegree. Hence, the “choose popular peers” hypothesis is not supported (it is supported in the opposite direction). One plausible reason is that once transitivity and reciprocity are controlled for, and given the nomination cap, the remaining marginal attractiveness of already-popular pupils can be reduced.
+
+2. Alcohol homophily (similar alcohol implies more likely friendship). This is captured by the alcohol similarity term (`simX` with `alcohol_cov`). The estimate is positive (estimate = 0.631, SE = 0.165), supporting the hypothesis that students are more likely to form ties to peers with similar alcohol consumption levels. The effect remains after controlling for the main endogenous processes (reciprocity and closure) and for gender and distance.
+
+3. Proximity (living nearby). This is captured by the dyadic covariate effect for log-distance (`X` with `logdist_cov`). The estimate is negative (estimate = -0.159, SE = 0.044), consistent with the hypothesis: larger log-distance (living further apart) reduces the likelihood of friendship nominations.
+
+Beyond the three focal hypotheses, the model also shows strong evidence for basic endogenous mechanisms: reciprocity is strongly positive, transitive triplets are positive, and the 3-cycles effect is negative, together implying a tendency toward hierarchical/transitive closure rather than cyclic closure. Gender homophily (`sameX`) is positive and large, indicating that same-gender friendships are substantially more likely.
+
+The reciprocity and transitivity parameters are large relative to their standard errors, which is typical in adolescent friendship networks: once one student nominates another, the probability of a return nomination increases sharply, and ties tend to form in locally transitive patterns (friends of friends). The negative 3-cycle parameter suggests that, conditional on transitivity, purely cyclic closure is less important than “ordered” closure (i.e., the process prefers transitive triangles over directed cycles). This supports the interpretation that friendship nominations reflect coherent local clustering rather than random cyclic patterns.
+
+---
+
+### (2.1) Influence model specification
+
+For the co-evolution model, we keep the friendship-selection specification from Part (1) for the network equation. The friendship equation therefore includes density/outdegree, reciprocity, transitive triplets, cyclic closure, indegree popularity, gender effects, alcohol similarity, and log-distance. In this part, alcohol is included as a behavioural dependent variable rather than only as a changing covariate, so alcohol similarity in the friendship equation tests selection on alcohol while alcohol change is modeled separately.
+
+For the behavioural alcohol equation, we include linear and quadratic shape effects as baseline controls for the distribution of alcohol consumption. These effects account for the general tendency toward higher or lower alcohol levels and the curvature of the behavioural distribution.
+
+Hypothesis iv, that popular students tend to increase or maintain their alcohol consumption, is tested with the `indeg` effect in the alcohol equation, using the friendship network as the interaction network. Since indegree measures the number of friendship nominations received, a positive estimate would indicate that more popular students tend to move toward, or maintain, higher alcohol consumption.
+
+Hypothesis v, that students adjust their alcohol consumption to that of their friends, is tested with the average alter effect (`avAlt`) in the alcohol equation, again using the friendship network. A positive `avAlt` estimate would indicate peer influence: students tend to adjust their alcohol consumption toward the average alcohol consumption of their nominated friends.
+
+---
+
+### (2.2) Estimation and convergence
+
+The co-evolution model, including both friendship selection and alcohol behaviour dynamics, was estimated with `RSiena::siena07()` using `n3 = 2500`. The overall maximum convergence ratio is 0.147 (see `task3_results/summary_part2_coevolution.txt`), which is below the common threshold of 0.25. The individual convergence t-ratios are also small in magnitude, indicating that no single effect shows problematic drift. Therefore, the model is considered sufficiently converged for interpretation.
+
+The model includes four sets of processes: (i) baseline density and network rates, (ii) endogenous friendship mechanisms such as reciprocity and closure, (iii) friendship selection on covariates such as gender, distance, and alcohol similarity, and (iv) behavioural dynamics for alcohol, including linear and quadratic shape effects, a popularity-related behavioural effect, and peer influence.
+
+The parameter estimates show that the friendship part of the co-evolution model is very similar to the network-only model. Reciprocity and transitive triplets remain strongly positive, while 3-cycles remain negative. This indicates that friendship dynamics are characterized by mutual nominations and transitive closure rather than cyclic closure. The negative log-distance effect again suggests that students living farther apart are less likely to be friends, and the positive alcohol similarity effect indicates selection into friendships based on similar alcohol consumption.
+
+In the alcohol behaviour equation, the linear shape effect is small relative to its standard error, so there is no clear evidence for a general tendency toward either higher or lower alcohol consumption. The quadratic shape effect is negative and statistically meaningful, suggesting that extreme alcohol levels are less attractive than more moderate levels. Thus, the basic alcohol dynamics are better described as avoiding extremes rather than as a simple overall increase or decrease in alcohol consumption.
+The estimated object is saved as `task3_results/ans_part2_coevolution.rds`. The full parameter table is saved as `task3_results/estimates_part2_coevolution.csv`.
+
+```{r part2_convergence_table, echo=FALSE}
+est2 <- read.csv("task3_results/estimates_part2_coevolution.csv")
+sum2 <- readLines("task3_results/summary_part2_coevolution.txt", warn = FALSE)
+conv2_line <- sum2[grepl("Overall maximum convergence ratio", sum2)][1]
+conv2 <- as.numeric(sub(".*ratio:\\s*", "", conv2_line))
+
+est2_eval_net <- subset(est2, dependent == "friendship" & type == "eval", select = c(effect, estimate, se, tconv))
+est2_eval_beh <- subset(est2, dependent == "alcohol" & type == "eval", select = c(effect, estimate, se, tconv))
+
+knitr::kable(
+  est2_eval_net,
+  booktabs = FALSE,
+  digits = 3,
+  caption = "Part (2) friendship evaluation effects: estimates, standard errors, and convergence t-ratios."
+)
+knitr::kable(
+  est2_eval_beh,
+  booktabs = FALSE,
+  digits = 3,
+  caption = paste0(
+    "Part (2) alcohol evaluation effects: estimates, standard errors, and convergence t-ratios. ",
+    "Overall maximum convergence ratio = ",
+    format(conv2, digits = 3)
+  )
+)
+```
+
+---
+
+### (2.3) Goodness of fit
+
+The goodness of fit of the co-evolution model is evaluated using the same network auxiliary statistics as in Part (1): outdegree distribution, indegree distribution, geodesic distance distribution, and triad census. Since alcohol consumption is now included as a behavioural dependent variable, we additionally evaluate the alcohol behaviour distribution. The joint p-values are saved in `task3_results/gof_part2_pvalues.csv`, and the corresponding GOF plots are shown below.
+
+The results indicate mixed goodness of fit. The indegree distribution fits reasonably well, with a joint p-value of 0.67. In the corresponding plot, the observed red line lies mostly within the simulated distributions, suggesting that the model reproduces the distribution of received friendship nominations, or popularity, reasonably well.
+
+The alcohol behaviour distribution also fits reasonably well, with a joint p-value of 0.44. The observed alcohol distribution is close to the simulated distributions, indicating that the behavioural part of the model captures the marginal distribution of alcohol consumption adequately. This supports the inclusion of the linear and quadratic alcohol shape effects as baseline controls for the behavioural outcome.
+
+However, the outdegree distribution, geodesic distance distribution, and triad census all show poor fit, with joint p-values rounding to 0. In the outdegree plot, the observed distribution deviates from the simulated distributions, indicating that the model does not fully reproduce the number of friendship nominations sent by students. This suggests remaining sender-side activity heterogeneity. The geodesic distance plot shows that the observed network has a different path-length structure from the simulated networks, meaning that the model does not fully capture the global connectivity and clustering of the friendship network. The triad census also fits poorly, indicating that the detailed local three-node configurations are not fully reproduced. The triad plot is dominated by the large number of empty triads, which is expected in a sparse network, but the joint p-value still indicates poor fit for the overall triadic composition.
+
+Overall, the co-evolution model reproduces the alcohol behaviour distribution and the indegree distribution reasonably well, but the network-structure misfit remains. This GOF failure does not mean that the estimated coefficients are meaningless. Rather, it means that the fitted model is an incomplete description of the data-generating process. The estimated signs and significance of effects such as reciprocity, alcohol similarity selection, and peer influence can still be informative, but conclusions depending on the poorly fitted aspects of the network, such as path lengths or specific triad types, should be interpreted cautiously.
+
+```{r part2_gof_plots, echo=FALSE, out.width='49%', fig.show='hold'}
+knitr::include_graphics(c(
+  "task3_figures/gof_part2_coevolution_outdegree.png",
+  "task3_figures/gof_part2_coevolution_indegree.png",
+  "task3_figures/gof_part2_coevolution_geodesic.png",
+  "task3_figures/gof_part2_coevolution_triad.png",
+  "task3_figures/gof_part2_coevolution_alcohol_dist.png"
+))
+```
+
+---
+
+### (2.4) Hypothesis tests and comparison
+
+The key behavioural hypotheses are tested in the alcohol equation of the co-evolution model.
+
+Hypothesis (iv) states that popular students tend to increase or maintain their level of alcohol consumption. We operationalize popularity by indegree in the friendship network, using the `indeg` effect in the alcohol equation. The estimate is positive but small relative to its standard error (estimate = 0.076, SE = 0.073). Therefore, this effect is not statistically distinguishable from zero. We do not find clear evidence that more popular students move toward, or remain at, higher alcohol consumption levels once the other behavioural controls are included.
+
+Hypothesis (v) states that students tend to adjust their alcohol consumption to that of their friends. This is tested with the average alter effect (`avAlt`) in the alcohol equation. The estimate is positive and statistically meaningful (estimate = 1.043, SE = 0.430). This supports the peer-influence hypothesis: students tend to adjust their alcohol consumption toward the average alcohol consumption of their friends.
+
+The conclusions for the friendship-selection hypotheses (i)–(iii) are similar in the network-only model and in the co-evolution model. The popularity effect in the friendship equation (`inPop`) remains negative, so the hypothesis that students choose popular peers is still not supported. The alcohol similarity effect remains positive, so the conclusion that students select friends with similar alcohol consumption remains supported. The log-distance effect also remains negative, meaning that students who live farther apart are less likely to be friends, therefore, the living-nearby hypothesis remains supported.
+
+The main difference between Part (1) and Part (2) is that Part (2) can separate alcohol-based selection from alcohol-based influence. In Part (1), the positive alcohol similarity effect only showed that students tend to choose friends with similar alcohol consumption. In Part (2), alcohol similarity in the friendship equation remains positive, while the average alter effect in the alcohol equation is also positive. This suggests that similarity in alcohol consumption among friends is produced by both mechanisms: students tend to select friends with similar alcohol consumption, and they also tend to adjust their alcohol consumption toward their friends over time.
+
+The other network effects are also stable across the two models. Reciprocity and transitive triplets remain strongly positive, while 3-cycles remain negative. This means that mutual nominations and transitive closure continue to be important mechanisms in friendship dynamics after adding the alcohol behaviour equation. Gender homophily also remains positive, and the negative log-distance effect remains largely unchanged.
+
+The behavioural shape effects serve as controls for the alcohol distribution. The linear shape effect is not statistically distinguishable from zero, so there is no clear general tendency toward higher or lower alcohol consumption. The quadratic shape effect is negative and statistically meaningful (estimate = -0.430, SE = 0.139), suggesting that extreme alcohol values are less favoured than more moderate values. These baseline controls make the interpretation of the peer influence effect more credible, because the influence effect is not simply capturing the marginal distribution of alcohol consumption.
+
+Overall, hypothesis (iv) is not supported, while hypothesis (v) is supported. The conclusions for hypotheses (i)–(iii) do not materially change after adding alcohol as a behavioural dependent variable: popularity selection is still not supported, while alcohol similarity selection and proximity remain supported.
+
+---
+
+### (2.5) Selection vs influence
+
+The fitted co-evolution model provides evidence for both selection and influence processes related to alcohol consumption.
+
+Selection is captured by the alcohol similarity effect in the friendship equation. This effect is positive, indicating that students are more likely to form or maintain friendship ties with peers who have similar alcohol consumption levels. Thus, part of the similarity in alcohol use among friends is explained by students selecting similar peers.
+
+Influence is captured by the average alter effect (`avAlt`) in the alcohol equation. This effect is positive and statistically significant, indicating that students tend to adjust their alcohol consumption toward the average alcohol consumption of their friends. Thus, part of the similarity in alcohol use among friends is explained by behavioural adaptation over time.
+
+Because both effects are present in the same co-evolution model, the results do not support a purely selection-based or purely influence-based interpretation. Instead, the evidence suggests that alcohol similarity among friends arises from both processes: students tend to choose friends with similar alcohol consumption, and they also tend to become more similar to their friends over time.
+
+---
+
+## (3) Model improvements
+
+The goodness-of-fit results show that the co-evolution model reproduces the indegree distribution and the alcohol behaviour distribution reasonably well, but it fits the outdegree distribution, geodesic distances, and triad census poorly. This suggests that the model is missing mechanisms related to sender activity, clustering, and opportunity structures. Several extensions could improve the representation of these auxiliary statistics.
+
+First, the model could include stronger **activity heterogeneity** effects. The poor outdegree fit suggests that the model does not fully capture differences in how many friendship nominations students send. An effect such as `outAct` could allow some actors to be systematically more active senders than others, beyond what is captured by the density term alone. This is plausible because friendship activity may differ between socially active and socially less active students, and the nomination cap of six friends may also shape the observed outdegree distribution.
+
+Second, the model could use a more flexible **closure specification**. Although the current model includes transitive triplets and 3-cycles, the poor triad census and geodesic-distance fit suggest that these terms do not fully capture the observed clustering structure. A closure effect such as `gwesp`, available in RSiena, could be used to model the effect of shared partners more flexibly. This may help reproduce local clustering and, indirectly, the distribution of shortest path lengths in the network.
+
+Third, the model could include additional **opportunity-structure covariates**. Students do not have equal opportunities to meet and become friends with all other students. Shared contexts such as class membership, same corridor, extracurricular activities, or shared leisure spaces could strongly shape friendship formation. Adding such dyadic covariates would help distinguish social preference from opportunity: students may appear to cluster not only because of endogenous transitivity, but also because they repeatedly encounter the same peers in structured settings. These covariates could improve the fit to geodesic distances and clustering patterns.
+
+---
+
+## (4) Two additional SAOM hypotheses
+
+A first additional hypothesis could be **age homophily in friendship dynamics**. Students may be more likely to form or maintain friendships with peers of similar age, even after controlling for gender, alcohol similarity, and distance. This is theoretically plausible because students of similar age may share classes, activities, and developmental experiences, making friendship formation more likely.
+
+This hypothesis could be operationalized by adding an age similarity effect in the friendship evaluation function, for example `simX` with an age covariate. A positive parameter would indicate that students tend to choose friends whose age is similar to their own.
+
+A second additional hypothesis could be **stronger alcohol influence through reciprocated friendships**. The influence of friends on alcohol consumption may be stronger when the friendship is mutually acknowledged rather than one-sided. Reciprocated friendships are likely to represent closer and more salient relationships, so their behavioural influence may be stronger than that of unilateral nominations.
+
+This hypothesis could be operationalized by defining a mutual friendship network that contains only reciprocated ties and then using this network for an average alter effect on alcohol. An `avAlt`-type effect based on the mutual friendship network would test whether students adjust their alcohol consumption toward the average alcohol consumption of reciprocated friends. A positive parameter would support the hypothesis that mutually acknowledged friendships are especially important channels of alcohol-related peer influence.

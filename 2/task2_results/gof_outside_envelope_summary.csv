@@ -1,0 +1,8 @@
+"stat_type","direction","n_bins"
+"distance","above",5
+"distance","below",5
+"idegree","above",2
+"odegree","above",3
+"odegree","below",2
+"triadcensus","above",6
+"triadcensus","below",3

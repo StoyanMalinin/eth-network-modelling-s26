@@ -1,0 +1,153 @@
+Jaccard indices written to task3_results/jaccard_indices.csv
+J(w1,w2) = 0.3036 
+J(w2,w3) = 0.3507 
+J(w1,w3) = 0.2341 
+
+  effectName            include fix   test  initialValue parm
+1 reciprocity           TRUE    FALSE FALSE          0   0   
+2 transitive triplets   TRUE    FALSE FALSE          0   0   
+3 3-cycles              TRUE    FALSE FALSE          0   0   
+4 indegree - popularity TRUE    FALSE FALSE          0   0   
+  effectName       include fix   test  initialValue parm
+1 gender_cov alter TRUE    FALSE FALSE          0   0   
+2 gender_cov ego   TRUE    FALSE FALSE          0   0   
+3 same gender_cov  TRUE    FALSE FALSE          0   0   
+  effectName             include fix   test  initialValue parm
+1 alcohol_cov similarity TRUE    FALSE FALSE          0   0   
+  effectName  include fix   test  initialValue parm
+1 logdist_cov TRUE    FALSE FALSE          0   0   
+If you use this algorithm object, siena07 will create/use an output file Siena.txt .
+
+Start phase 0 
+theta: -1.61  0.00  0.00  0.00  0.00  0.00  0.00  0.00  0.00  0.00 
+
+Start phase 1 
+Phase 1 Iteration 1 Progress: 0%
+Phase 1 Iteration 2 Progress: 0%
+Phase 1 Iteration 3 Progress: 0%
+Phase 1 Iteration 4 Progress: 0%
+Phase 1 Iteration 5 Progress: 0%
+Phase 1 Iteration 10 Progress: 0%
+Phase 1 Iteration 15 Progress: 0%
+Phase 1 Iteration 20 Progress: 0%
+Phase 1 Iteration 25 Progress: 0%
+Phase 1 Iteration 30 Progress: 1%
+Phase 1 Iteration 35 Progress: 1%
+Phase 1 Iteration 40 Progress: 1%
+Phase 1 Iteration 45 Progress: 1%
+Phase 1 Iteration 50 Progress: 1%
+theta: -1.8455  0.4359  0.1758  0.0625 -0.0136 -0.0390 -0.0160 -0.0265  0.1449 -0.1319 
+
+Start phase 2.1
+Phase 2 Subphase 1 Iteration 1 Progress: 10%
+Phase 2 Subphase 1 Iteration 2 Progress: 10%
+theta -1.9067  0.6248  0.2580  0.1035 -0.0217 -0.0603 -0.0229 -0.0442  0.1617 -0.1395 
+ac  0.881  1.306  1.393  1.355  0.793  1.370  1.234 -0.457 -2.233  1.088 
+Phase 2 Subphase 1 Iteration 3 Progress: 10%
+Phase 2 Subphase 1 Iteration 4 Progress: 10%
+theta -2.1241  1.2659  0.4879  0.1960 -0.0500 -0.1179 -0.0560 -0.0641  0.2351 -0.1056 
+ac  0.834  0.990  0.158  0.142  0.687  1.182  1.277 -0.655  0.464  1.172 
+Phase 2 Subphase 1 Iteration 5 Progress: 10%
+Phase 2 Subphase 1 Iteration 6 Progress: 10%
+theta -2.2430  1.6819  0.4089  0.0160 -0.0635 -0.1157 -0.1000  0.0229  0.3450  0.1311 
+ac 0.9426 0.9406 0.0351 0.0673 0.7943 0.6706 0.9910 0.5915 0.6278 1.1071 
+Phase 2 Subphase 1 Iteration 7 Progress: 10%
+Phase 2 Subphase 1 Iteration 8 Progress: 10%
+theta -2.4149  2.0001  0.4436 -0.0896 -0.0773 -0.1400 -0.1106  0.1007  0.4387  0.3439 
+ac  0.9899  0.9460 -0.1251 -0.0639  0.8060  0.5306  0.6619  0.0838  0.4971  1.1084 
+Phase 2 Subphase 1 Iteration 9 Progress: 10%
+Phase 2 Subphase 1 Iteration 10 Progress: 10%
+theta -2.5479  2.1552  0.4788 -0.1847 -0.0862 -0.1403 -0.1367  0.1166  0.5221  0.4811 
+ac  0.992  0.850 -0.293 -0.225  0.772  0.024  0.254  0.354  0.145  1.110 
+Phase 2 Subphase 1 Iteration 1 Progress: 10%
+Phase 2 Subphase 1 Iteration 2 Progress: 10%
+Phase 2 Subphase 1 Iteration 3 Progress: 10%
+Phase 2 Subphase 1 Iteration 4 Progress: 10%
+Phase 2 Subphase 1 Iteration 5 Progress: 10%
+Phase 2 Subphase 1 Iteration 6 Progress: 10%
+Phase 2 Subphase 1 Iteration 7 Progress: 10%
+Phase 2 Subphase 1 Iteration 8 Progress: 10%
+Phase 2 Subphase 1 Iteration 9 Progress: 10%
+Phase 2 Subphase 1 Iteration 10 Progress: 11%
+theta -3.0870  2.2009  0.6800 -0.4725 -0.0796 -0.1516 -0.1541  0.1389  0.9228  0.6320 
+ac -0.9017 -0.8927 -0.9051 -0.9524 -0.8975 -0.7778 -0.0145 -0.2340 -0.8759 -0.5432 
+theta: -3.0870  2.2009  0.6800 -0.4725 -0.0796 -0.1516 -0.1541  0.1389  0.9228  0.6320 
+
+Start phase 2.2
+Phase 2 Subphase 2 Iteration 1 Progress: 15%
+Phase 2 Subphase 2 Iteration 2 Progress: 15%
+Phase 2 Subphase 2 Iteration 3 Progress: 15%
+Phase 2 Subphase 2 Iteration 4 Progress: 15%
+Phase 2 Subphase 2 Iteration 5 Progress: 15%
+Phase 2 Subphase 2 Iteration 6 Progress: 15%
+Phase 2 Subphase 2 Iteration 7 Progress: 15%
+Phase 2 Subphase 2 Iteration 8 Progress: 15%
+Phase 2 Subphase 2 Iteration 9 Progress: 15%
+Phase 2 Subphase 2 Iteration 10 Progress: 15%
+Phase 2 Subphase 2 Iteration 1 Progress: 15%
+Phase 2 Subphase 2 Iteration 2 Progress: 15%
+Phase 2 Subphase 2 Iteration 3 Progress: 15%
+Phase 2 Subphase 2 Iteration 4 Progress: 15%
+Phase 2 Subphase 2 Iteration 5 Progress: 15%
+Phase 2 Subphase 2 Iteration 6 Progress: 15%
+Phase 2 Subphase 2 Iteration 7 Progress: 15%
+Phase 2 Subphase 2 Iteration 8 Progress: 15%
+Phase 2 Subphase 2 Iteration 9 Progress: 15%
+Phase 2 Subphase 2 Iteration 10 Progress: 15%
+theta -3.0671  2.2132  0.7003 -0.4799 -0.0812 -0.1620 -0.1058  0.0921  0.8857  0.6621 
+ac -0.647 -0.819 -0.749 -0.747 -0.648 -0.366 -0.134 -0.495 -0.552 -0.139 
+theta: -3.0671  2.2132  0.7003 -0.4799 -0.0812 -0.1620 -0.1058  0.0921  0.8857  0.6621 
+
+Start phase 2.3
+Phase 2 Subphase 3 Iteration 1 Progress: 20%
+Phase 2 Subphase 3 Iteration 2 Progress: 20%
+Phase 2 Subphase 3 Iteration 3 Progress: 20%
+Phase 2 Subphase 3 Iteration 4 Progress: 20%
+Phase 2 Subphase 3 Iteration 5 Progress: 20%
+Phase 2 Subphase 3 Iteration 6 Progress: 20%
+Phase 2 Subphase 3 Iteration 7 Progress: 20%
+Phase 2 Subphase 3 Iteration 8 Progress: 20%
+Phase 2 Subphase 3 Iteration 9 Progress: 20%
+Phase 2 Subphase 3 Iteration 10 Progress: 20%
+theta -3.0833  2.1963  0.6875 -0.4679 -0.0789 -0.1623 -0.1641  0.1392  0.9080  0.6339 
+ac -0.1856 -0.3617 -0.4582 -0.4601 -0.2494 -0.0660 -0.0826 -0.0757 -0.2476 -0.0822 
+theta: -3.0833  2.1963  0.6875 -0.4679 -0.0789 -0.1623 -0.1641  0.1392  0.9080  0.6339 
+
+Start phase 2.4
+Phase 2 Subphase 4 Iteration 1 Progress: 29%
+Phase 2 Subphase 4 Iteration 2 Progress: 29%
+Phase 2 Subphase 4 Iteration 3 Progress: 29%
+Phase 2 Subphase 4 Iteration 4 Progress: 29%
+Phase 2 Subphase 4 Iteration 5 Progress: 29%
+Phase 2 Subphase 4 Iteration 6 Progress: 29%
+Phase 2 Subphase 4 Iteration 7 Progress: 29%
+Phase 2 Subphase 4 Iteration 8 Progress: 29%
+Phase 2 Subphase 4 Iteration 9 Progress: 29%
+Phase 2 Subphase 4 Iteration 10 Progress: 29%
+Phase 2 Subphase 4 Iteration 500 Progress: 38%
+theta -3.078  2.203  0.691 -0.481 -0.081 -0.158 -0.147  0.138  0.908  0.664 
+ac -0.0508 -0.1866 -0.1397 -0.1437 -0.0558 -0.0360 -0.1504 -0.1751 -0.0450 -0.0151 
+theta -3.0737  2.2028  0.6910 -0.4726 -0.0804 -0.1589 -0.1475  0.1258  0.9010  0.6310 
+ac -0.03047 -0.17003 -0.12713 -0.12986 -0.03719 -0.02924 -0.13626 -0.11670 -0.00444 -0.00256 
+theta: -3.0737  2.2028  0.6910 -0.4726 -0.0804 -0.1589 -0.1475  0.1258  0.9010  0.6310 
+
+Start phase 3 
+Phase 3 Iteration 200 Progress 48%
+Phase 3 Iteration 400 Progress 52%
+Phase 3 Iteration 600 Progress 56%
+Phase 3 Iteration 800 Progress 59%
+Phase 3 Iteration 1000 Progress 63%
+Phase 3 Iteration 1200 Progress 67%
+Phase 3 Iteration 1400 Progress 71%
+Phase 3 Iteration 1600 Progress 74%
+Phase 3 Iteration 1800 Progress 78%
+Phase 3 Iteration 2000 Progress 82%
+Phase 3 Iteration 2200 Progress 85%
+Phase 3 Iteration 2400 Progress 89%
+Phase 3 Iteration 2600 Progress 93%
+Phase 3 Iteration 2800 Progress 96%
+Phase 3 Iteration 3000 Progress 100%
+Error in setEffect(eff2, name = "friendship", effect = "alcohol similarity",  : 
+  argument 3 matches multiple formal arguments
+Calls: main
+Execution halted

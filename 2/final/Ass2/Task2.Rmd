@@ -1,0 +1,393 @@
+---
+title: "Task 2 — Estimation and interpretation of an ERGM"
+output:
+  pdf_document:
+    latex_engine: xelatex
+    fig_caption: yes
+  html_document:
+    fig_caption: yes
+header-includes:
+  - \renewcommand{\and}{\\}
+  - \usepackage{float}
+editor_options:
+  markdown:
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  error = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  fig.pos = "H",
+  out.width = "40%"
+)
+```
+All computations use the Wave 1 directed friendship network (`Glasgow/f1.csv`) with `n = 129` students (diagonal fixed to 0).
+
+To reproduce all tables/figures in this write-up, run:
+
+```{bash, eval=FALSE}
+Rscript Task2.R
+```
+
+This writes results to `task2_results/` and figures to `task2_figures/`. (To force a full re-fit instead of using cached `.rds` files, run `TASK2_REFIT=1 Rscript Task2.R`.)
+
+---
+
+## (1) Edges and gender homophily
+
+We estimate the dyad-independent ERGM:
+
+\[
+\Pr(X=x) \propto \exp\left\{\theta_{\text{edges}} \sum_{i\ne j} x_{ij} + \theta_{\text{same}} \sum_{i\ne j} x_{ij}\,\mathbb{1}\{g_i=g_j\}\right\}.
+\]
+
+Derivation of the conditional tie probability: fix the rest of the network \(X_{-ij}\). Then there are only two complete networks consistent with it:
+
+\[
+x^{+}:\; x_{ij}=1,\qquad x^{-}:\; x_{ij}=0.
+\]
+
+By definition of conditional probability,
+
+\[
+\Pr(X_{ij}=1\mid X_{-ij})=\frac{\Pr(X=x^{+})}{\Pr(X=x^{+})+\Pr(X=x^{-})},\qquad
+\Pr(X_{ij}=0\mid X_{-ij})=\frac{\Pr(X=x^{-})}{\Pr(X=x^{+})+\Pr(X=x^{-})}.
+\]
+
+Taking the ratio cancels the common denominator:
+
+\[
+\frac{\Pr(X_{ij}=1\mid X_{-ij})}{\Pr(X_{ij}=0\mid X_{-ij})}
+=\frac{\Pr(X=x^{+})}{\Pr(X=x^{-})}.
+\]
+
+Now we compute the ratio \(\Pr(X=x^{+})/\Pr(X=x^{-})\) using the ERGM form with the two statistics used here:
+\(\text{edges}(x)=\sum_{a\ne b}x_{ab}\) and
+\(\text{nodematch}(x)=\sum_{a\ne b}x_{ab}\,\mathbb{1}\{g_a=g_b\}\).
+
+\[
+\Pr(X=x)=\frac{\exp\left(\theta_{\text{edges}}\text{edges}(x)+\theta_{\text{same}}\text{nodematch}(x)\right)}{\kappa(\theta)}.
+\]
+
+Plugging this into the ratio gives
+
+\[
+\frac{\Pr(X=x^{+})}{\Pr(X=x^{-})}
+=\frac{
+\exp\left(\theta_{\text{edges}}\text{edges}(x^{+})+\theta_{\text{same}}\text{nodematch}(x^{+})\right)/\kappa(\theta)
+}{
+\exp\left(\theta_{\text{edges}}\text{edges}(x^{-})+\theta_{\text{same}}\text{nodematch}(x^{-})\right)/\kappa(\theta)
+}.
+\]
+
+The \(\kappa(\theta)\) cancels, so
+
+\[
+\frac{\Pr(X=x^{+})}{\Pr(X=x^{-})}
+=\exp\Big(
+\theta_{\text{edges}}\big[\text{edges}(x^{+})-\text{edges}(x^{-})\big]
++\theta_{\text{same}}\big[\text{nodematch}(x^{+})-\text{nodematch}(x^{-})\big]
+\Big).
+\]
+
+Because \(x^{+}\) differs from \(x^{-}\) only by adding the single tie \(i\to j\),
+\(\text{edges}(x^{+})-\text{edges}(x^{-})=1\).
+For the nodematch statistic, adding \(i\to j\) contributes 1 if and only if \(g_i=g_j\), so
+\(\text{nodematch}(x^{+})-\text{nodematch}(x^{-})=\mathbb{1}\{g_i=g_j\}\).
+Therefore,
+
+\[
+\frac{\Pr(X_{ij}=1\mid X_{-ij})}{\Pr(X_{ij}=0\mid X_{-ij})}
+=\exp\left(\theta_{\text{edges}}+\theta_{\text{same}}\mathbb{1}\{g_i=g_j\}\right).
+\]
+
+Taking logs gives the conditional log-odds form:
+
+\[
+\log\frac{\Pr(X_{ij}=1\mid X_{-ij})}{\Pr(X_{ij}=0\mid X_{-ij})}
+= \theta_{\text{edges}} + \theta_{\text{same}}\mathbb{1}\{g_i=g_j\}.
+\]
+
+Let \(p=\Pr(X_{ij}=1\mid X_{-ij})\). Since \(\Pr(X_{ij}=0\mid X_{-ij})=1-p\), we have
+
+\[
+\frac{p}{1-p}=\exp\left(\theta_{\text{edges}}+\theta_{\text{same}}\mathbb{1}\{g_i=g_j\}\right),
+\]
+
+and hence \(p=\text{logit}^{-1}\left(\theta_{\text{edges}}+\theta_{\text{same}}\mathbb{1}\{g_i=g_j\}\right)\).
+
+Thus,
+
+If \(g_i=g_j\), then
+\[
+\frac{p}{1-p}=\exp(\theta_{\text{edges}}+\theta_{\text{same}}),
+\qquad
+p=\text{logit}^{-1}(\theta_{\text{edges}}+\theta_{\text{same}}).
+\]
+
+If \(g_i\neq g_j\), then
+\[
+\frac{p}{1-p}=\exp(\theta_{\text{edges}}),
+\qquad
+p=\text{logit}^{-1}(\theta_{\text{edges}}).
+\]
+
+Estimated values (from `task2_results/part1_tie_probabilities.csv`):
+
+\[
+\Pr(X_{ij}=1\mid g_i\neq g_j)=0.00660,
+\qquad
+\Pr(X_{ij}=1\mid g_i=g_j)=0.0473.
+\]
+
+The odds ratio for same vs different gender is \(\exp(\hat\theta_{\text{same}})=7.46\).
+
+Interpretation: same-gender dyads have about 7.5× higher odds of a tie than different-gender dyads in this model. Coefficients are saved in `task2_results/part1_model_coefficients.csv`.
+
+---
+
+```{r, echo=FALSE}
+library(ergm)
+```
+
+## (2) Full model specification
+
+We estimate a single ERGM to test the hypotheses simultaneously. The
+model is:
+
+\[
+\Pr(X=x)\propto \exp\{\theta^\top s(x)\},
+\]
+
+with statistics \(s(x)\) chosen so that each hypothesis corresponds to
+one coefficient (while controlling for basic endogenous/exogenous
+structure):
+
+**Gender homophily:** `nodematch("gender")`.
+
+**Reciprocity:** `mutual`.
+
+**Transitivity** (closing transitive two-paths \(i\to k\to j\) by adding \(i\to j\)): `gwesp(0.2, fixed=TRUE, type="OTP")`. In `ergm`, `type="OTP"` corresponds to transitive shared partners; fixing the decay follows the assignment guidance and reduces degeneracy risk.
+
+**Gender activity** (boys send more): `nodeofactor("gender", levels=1)` where gender is coded as `1=boy, 2=girl`.
+
+**Gender popularity** (boys receive more): `nodeifactor("gender", levels=1)`.
+
+**Alcohol activity:** `nodeocov("alcohol")` with Wave-1 alcohol.
+
+**Alcohol popularity:** `nodeicov("alcohol")` with Wave-1 alcohol.
+
+**Alcohol homophily:** `absdiff("alcohol")` (expected negative if similar students are more likely to tie).
+
+**Control for opportunity structure** (nearby pupils meet more often): `edgecov(logdistance)` (expected negative).
+
+**Control for general popularity and activity**: `gwidegree` and `gwodegree` (both coefficients are expected to be postive).
+
+**Control for age gap**: `absdiff("age")` (expected negative if similar students are more likely to tie).
+
+The expected coefficient signs under the hypotheses are:
+
+```{r part2_hypothesis_map, echo=FALSE}
+hmap <- data.frame(
+  hypothesis = c(
+    "Reciprocity: i->j more likely if j->i exists",
+    "Transitivity: i->j more likely if i->k->j exists",
+    "Boys higher activity (send more ties)",
+    "Boys higher popularity (receive more ties)",
+    "Higher alcohol -> higher activity",
+    "Higher alcohol -> higher popularity",
+    "Alcohol homophily (similarity)",
+    "Higher popularity",
+    "Higher activity",
+    "Age homophily (similarity)"
+  ),
+  term = c(
+    "mutual",
+    "gwesp(0.2, fixed=TRUE, type='OTP')",
+    "nodeofactor('gender', levels=1)",
+    "nodeifactor('gender', levels=1)",
+    "nodeocov('alcohol')",
+    "nodeicov('alcohol')",
+    "absdiff('alcohol')",
+    "gwidegree(0.6, fixed = TRUE)",
+    "gwodegree(0.6, fixed = TRUE)",
+    "absdiff('age')"
+  ),
+  expected_sign = c("+", "+", "+", "+", "+", "+", "−", "+", "+", "-"),
+  stringsAsFactors = FALSE
+)
+knitr::kable(hmap)
+```
+
+The fitted coefficients are in `task2_results/full_model_coefficients.csv` (MCMC-MLE), with MPLE initialization in `task2_results/full_model_mple_coefficients.csv`.
+
+---
+
+## (3) Estimation and convergence
+
+Because `mutual` and `gwesp` induce dependence among edges, the model is
+estimated by MCMC-MLE (`ergm` package) using MPLE as initialization.
+
+Diagnostics are saved to `task2_figures/mcmc_diagnostics_full_model.pdf`.
+
+For MCMC-MLE there are two things to check for convergence:
+
+1. MCMLE iterations: parameter updates stabilize and the estimating
+   equations (scores) are close to 0. This can be seen from the distributions.
+2. MCMC mixing: the Monte Carlo sample at the final parameter values
+   is sufficiently well-mixed so that standard errors are reliable. This can be seen from the traces.
+
+
+`Task2.R` writes a short convergence summary:
+
+```{r part3_convergence_summary, echo=FALSE}
+conv <- read.csv("task2_results/full_model_convergence_summary.csv")
+stopifnot(nrow(conv) == 1)
+
+order_metrics <- c(
+  "mcmle_iterations",
+  "mcmle_maxit",
+  "mcmle_hit_maxit",
+  "mcmle_failure",
+  "max_abs_score",
+  "max_abs_coef_change_last_window"
+)
+metrics <- intersect(order_metrics, names(conv))
+values <- conv[1, metrics, drop = FALSE]
+
+format_value <- function(x) {
+  if (is.numeric(x)) return(format(signif(x, 5), trim = TRUE, scientific = FALSE))
+  if (is.logical(x)) return(ifelse(x, "TRUE", "FALSE"))
+  as.character(x)
+}
+
+kv <- data.frame(
+  metric = metrics,
+  value = vapply(values, format_value, character(1)),
+  row.names = NULL
+)
+
+knitr::kable(kv, col.names = c("Metric", "Value"))
+```
+
+Interpretation:
+
+The estimation did not fail (`mcmle_failure = FALSE`) and the 
+coefficients are stable near the end (small 
+`max_abs_coef_change_last_window`). The algorithm did not hit the iteration cap (`mcmle_hit_maxit = FALSE`), 
+so we can claim “formal” convergence. The MCMC diagnostics show roughly stationary traces 
+(no clear drift) and good mixing (low autocorrelation, which can also be seen from the lag reports). 
+
+Overall, the model did not report a numerical failure and the late-iteration 
+coefficient changes are small, suggesting that the fit is usable for interpretation. 
+
+---
+
+## (4) Goodness of fit
+
+GOF is evaluated against four auxiliary statistics:
+
+Out-degree distribution (`odegree`), in-degree distribution (`idegree`), geodesic distance distribution (`distance`), and directed triad census (`triadcensus`).
+
+The combined GOF plot is saved in `task2_figures/gof_full_model.png`.
+
+```{r part4_gof_plot, echo=FALSE, out.width="100%", fig.width=10, fig.height=12}
+gof <- readRDS(file.path("task2_results", "gof_full_model.rds"))
+par(mfrow = c(3, 2))
+plot(gof)
+par(mfrow = c(1, 1))
+```
+
+To make the discussion precise, `Task2.R` also checks which bins fall
+outside the 95% simulation envelope:
+
+```{r part4_gof_outside_summary, echo=FALSE}
+gof_sum <- read.csv("task2_results/gof_outside_envelope_summary.csv")
+knitr::kable(gof_sum)
+```
+
+Main takeaways from the GOF:
+
+The model does not capture the out-degree distribution very well (several degree bins outside the envelope). The observed distance distribution has a heavier tail than simulations, and the observed proportion of unreachable ordered pairs is larger than simulated, suggesting that the simulated networks are much more connected than in reality. Many triad types fall outside the envelope, so even with reciprocity (`mutual`) and transitive closure (`gwesp`), the model misses important local configurations beyond those two mechanisms.
+
+---
+
+## (5) Interpretation and hypothesis tests
+
+All coefficients are interpreted as conditional log-odds changes for
+toggling a tie \(i\to j\), holding the rest of the network fixed:
+
+\[
+\log\frac{\Pr(X_{ij}=1\mid X_{-ij})}{\Pr(X_{ij}=0\mid X_{-ij})}
+= \theta^\top \Delta_{ij}s(X),
+\]
+
+where \(\Delta_{ij}s(X)\) is the vector of change statistics induced by
+switching \(X_{ij}\) from 0 to 1. For covariate terms like
+`nodeicov("alcohol")`, this is the covariate value of the receiver; for
+`absdiff("alcohol")`, it is the absolute difference \(|a_i-a_j|\); for
+structural terms like `mutual` and `gwesp`, it depends on local network
+configuration around \(i\) and \(j\).
+
+Estimated coefficients (MCMC-MLE):
+
+```{r part5_coef_table, echo=FALSE}
+cf <- read.csv("task2_results/full_model_coefficients.csv")
+cf$odds_ratio <- exp(cf$estimate)
+knitr::kable(
+  cf[, c("term", "estimate", "std_error", "z", "p_value", "odds_ratio")],
+  digits = 4
+)
+```
+
+Hypothesis conclusions (at 5% significance level):
+
+**i. Reciprocity** (`mutual`) is positive, and significant, so the reciprocity hypothesis is supported.
+
+**ii. Transitivity** (`gwesp`, OTP) is positive and significant, implying higher odds of \(i\to j\) when it would close transitive two-paths \(i\to k\to j\) (with diminishing returns as the number of such shared partners increases), so the transitivity hypothesis is supported.
+
+**iii. Gender activity** (`nodeofactor.gender.1`) is not significant, so there is no evidence that boys send more nominations once the other mechanisms are controlled for.
+
+**iv. Gender popularity** (`nodeifactor.gender.1`) is not significant, so there is no evidence that boys receive more nominations once the other mechanisms are controlled for.
+
+**v. Alcohol activity** (`nodeocov.alcohol`) is significantly negative, so the “higher alcohol implies higher activity” hypothesis is not supported (it goes in the opposite direction).
+
+**vi. Alcohol popularity** (`nodeicov.alcohol`) is significantly positive, so the “higher alcohol implies higher popularity” hypothesis is supported.
+
+**vii. Alcohol homophily** (`absdiff.alcohol`) is significantly negative, so more similar students are more likely to be connected; the homophily hypothesis is supported.
+
+Controls: **gender homophily** (`nodematch.gender`) remains positive and significant after controlling for reciprocity, transitivity, alcohol effects, and distance. The **distance effect** (`edgecov.logdistance`) is negative and significant, so ties are less likely as log-distance increases (greater geographic separation). The **degree effects** (`gwideg.fixed` and `gwodeg.fixed`) are positive and significant. This indicates that pupils are Incentivized to increase their in- and out-degrees (with diminishing returns).
+
+---
+
+## (6) Model improvements
+
+The GOF results suggest several targeted extensions:
+
+1. Isolation: add a term controlling for isolated nodes (e.g. `isolates`). Currently the simulated networks produce much more isolates than the reference network. The simulated networks also have much more pairs of nodes that are far apart. This indicates that these networks are much less connected. Controlling for isolates should help us improve on that.
+
+2. Closure mechanisms: add directed closure terms beyond transitive shared partners, for example a cyclical shared-partner term `gwesp(decay, fixed=TRUE, type="ITP")` (tendency toward directed cycles) alongside the transitive `type="OTP"` term, or more specific triad terms if theoretically justified. While not directly changing the connectivity of the network, this should affect the out-degree distribution and the triad census, hopefully providing a better GOF.  
+
+These changes should be added incrementally, re-checking (i) MCMC
+diagnostics for degeneracy and (ii) GOF after each addition.
+
+---
+
+## (7) Additional hypotheses
+
+Below are two examples of additional local-mechanism hypotheses that could be tested with ERGMs.
+
+1. Delinquency activity: Children with higher delinquency tend to send more friend nominations. One way to operationalize this is to use the following statistic
+\[
+\sum_i z_i \sum_j x_{ij}
+\]
+where \(z_i\) is the delinquency of the \(i\)-th pupil, where \(x_{i, j}\) denotes the presence or absence of an edge from \(i\) to \(j\). We will expect a positive and significant coefficient to support this hypothesis.
+ 
+2. Cyclic closure: beyond transitive closure, pupils tend to form directed 3-cycles (A→B→C→A). One operationalization is the 3-cycle count \(\sum_{i,j,k} x_{ij}x_{jk}x_{ki}\). In `ergm`, a practical way to target this mechanism is a cyclical shared-partner term `gwesp(decay, fixed=TRUE, type="ITP")` (ITP corresponds to cyclical shared partners). Pictorially:
+\[
+i \to j \to k \to i
+\]
+We will expect a positive and significant coefficient to support this hypothesis.

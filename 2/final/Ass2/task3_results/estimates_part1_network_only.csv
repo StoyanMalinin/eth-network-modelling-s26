@@ -1,0 +1,13 @@
+"dependent","type","effect","short_name","interaction1","estimate","se","tconv"
+"friendship","rate","Rate parameter period 1","Rate",NA,10.9975787220685,0.99994222796733,NA
+"friendship","rate","Rate parameter period 2","Rate",NA,9.03456479432953,0.829324051018995,NA
+"friendship","eval","outdegree (density)","density","",-3.07368249019816,0.123600532135553,0.00442088073314294
+"friendship","eval","reciprocity","recip","",2.20284714633919,0.106386129717792,-0.003222126912995
+"friendship","eval","transitive triplets","transTrip","",0.690956206408678,0.0432974668808216,-0.00149140803367618
+"friendship","eval","3-cycles","cycle3","",-0.472586152138974,0.0877694674535598,-0.0127194861133388
+"friendship","eval","indegree - popularity","inPop","",-0.080358541299454,0.0200326894554386,-0.00823977038835049
+"friendship","eval","logdist_cov","X","logdist_cov",-0.158936354185566,0.0444348673460765,0.0516540206739731
+"friendship","eval","gender_cov alter","altX","gender_cov",-0.147523774742369,0.101630780857122,0.0735195175191816
+"friendship","eval","gender_cov ego","egoX","gender_cov",0.125832933330954,0.104414900117027,0.0367765807625211
+"friendship","eval","same gender_cov","sameX","gender_cov",0.900979370219971,0.0951917245937715,0.00722025772667355
+"friendship","eval","alcohol_cov similarity","simX","alcohol_cov",0.630954100243912,0.165310197846598,-0.0160351777500776

@@ -1,0 +1,19 @@
+"dependent","type","effect","short_name","interaction1","estimate","se","tconv"
+"friendship","rate","constant friendship rate (period 1)","Rate","",10.9284738520428,0.984666620763618,0.0200722660190554
+"friendship","rate","constant friendship rate (period 2)","Rate","",8.95569661150672,0.765325718820407,0.0698744834058779
+"friendship","eval","outdegree (density)","density","",-3.09026377982848,0.133196015398289,-0.0330811953720177
+"friendship","eval","reciprocity","recip","",2.17773247156798,0.105834981118323,-0.0150782298208916
+"friendship","eval","transitive triplets","transTrip","",0.685917659874314,0.0441110081629717,-0.0109239375503175
+"friendship","eval","3-cycles","cycle3","",-0.466514773747428,0.0869936326368213,-0.00743012891410321
+"friendship","eval","indegree - popularity","inPop","",-0.0801118576666662,0.0207856567081448,-0.0334733477003182
+"friendship","eval","logdist_cov","X","logdist_cov",-0.159913823125415,0.0445708593059684,0.060065825012187
+"friendship","eval","gender_cov alter","altX","gender_cov",-0.153566336976352,0.102252603270704,0.00392359949352388
+"friendship","eval","gender_cov ego","egoX","gender_cov",0.126682073862688,0.0979085798908213,0.00130556385044712
+"friendship","eval","same gender_cov","sameX","gender_cov",0.89199954496978,0.0944531498476843,-0.0362490276752214
+"friendship","eval","alcohol similarity","simX","alcohol",1.22448730603818,0.366902633542941,-0.0432307607599611
+"alcohol","rate","rate alcohol (period 1)","Rate","",1.56776934560487,0.273264896241544,0.0118596302345064
+"alcohol","rate","rate alcohol (period 2)","Rate","",2.19658452044587,0.394402681706238,-0.00395189826243768
+"alcohol","eval","alcohol linear shape","linear","",0.142990705503806,0.255760552789678,-0.0208870214188386
+"alcohol","eval","alcohol quadratic shape","quad","",-0.429487213549073,0.139041192818306,-0.0271329017298284
+"alcohol","eval","alcohol indegree","indeg","friendship",0.0756320829362282,0.0730125402753855,-0.0052743503652991
+"alcohol","eval","alcohol average alter","avAlt","friendship",1.04304868064183,0.430050006934842,-0.0101522508249794
