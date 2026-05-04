@@ -342,7 +342,7 @@ hmap <- data.frame(
     "gwodegree(0.6, fixed = TRUE)",
     "absdiff('age')"
   ),
-  expected_sign = c("+", "+", "+", "+", "+", "+", "−", "-", "-", "-"),
+  expected_sign = c("+", "+", "+", "+", "+", "+", "−", "−", "−", "−"),
   stringsAsFactors = FALSE
 )
 knitr::kable(hmap)
@@ -417,8 +417,6 @@ coefficient changes are small, suggesting that the fit is usable for interpretat
 GOF is evaluated against four auxiliary statistics:
 
 Out-degree distribution (`odegree`), in-degree distribution (`idegree`), geodesic distance distribution (`distance`), and directed triad census (`triadcensus`).
-
-The combined GOF plot is saved in `task2_figures/gof_full_model.png`.
 
 ```{r part4_gof_plot, echo=FALSE, out.width="100%", fig.width=10, fig.height=12}
 gof <- readRDS(file.path("task2_results", "gof_full_model.rds"))
