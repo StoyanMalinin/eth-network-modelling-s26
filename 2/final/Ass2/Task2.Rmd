@@ -184,7 +184,7 @@ structure):
 
 **Control for opportunity structure** (nearby pupils meet more often): `edgecov(logdistance)` (expected negative).
 
-**Control for general popularity and activity**: `gwidegree` and `gwodegree` (both coefficients are expected to be postive).
+**Control for general popularity and activity**: `gwidegree` and `gwodegree` (both coefficients are expected to be negative due to diminishing returns).
 
 **Control for age gap**: `absdiff("age")` (expected negative if similar students are more likely to tie).
 
@@ -200,8 +200,8 @@ hmap <- data.frame(
     "Higher alcohol -> higher activity",
     "Higher alcohol -> higher popularity",
     "Alcohol homophily (similarity)",
-    "Higher popularity",
-    "Higher activity",
+    "Popularity",
+    "Activity",
     "Age homophily (similarity)"
   ),
   term = c(
@@ -216,7 +216,7 @@ hmap <- data.frame(
     "gwodegree(0.6, fixed = TRUE)",
     "absdiff('age')"
   ),
-  expected_sign = c("+", "+", "+", "+", "+", "+", "−", "+", "+", "-"),
+  expected_sign = c("+", "+", "+", "+", "+", "+", "−", "-", "-", "-"),
   stringsAsFactors = FALSE
 )
 knitr::kable(hmap)
@@ -311,7 +311,7 @@ knitr::kable(gof_sum)
 
 Main takeaways from the GOF:
 
-The model does not capture the out-degree distribution very well (several degree bins outside the envelope). The observed distance distribution has a heavier tail than simulations, and the observed proportion of unreachable ordered pairs is larger than simulated, suggesting that the simulated networks are much more connected than in reality. Many triad types fall outside the envelope, so even with reciprocity (`mutual`) and transitive closure (`gwesp`), the model misses important local configurations beyond those two mechanisms.
+The model does not capture the out-degree distribution very well (several degree bins outside the envelope). The observed distance distribution has a heavier tail than simulations, and the observed proportion of unreachable ordered pairs is smaller than simulated, suggesting that the simulated networks are much more connected than in reality. Many triad types fall outside the envelope, so even with reciprocity (`mutual`) and transitive closure (`gwesp`), the model misses important local configurations beyond those two mechanisms.
 
 ---
 
@@ -359,17 +359,16 @@ Hypothesis conclusions (at 5% significance level):
 
 **vii. Alcohol homophily** (`absdiff.alcohol`) is significantly negative, so more similar students are more likely to be connected; the homophily hypothesis is supported.
 
-Controls: **gender homophily** (`nodematch.gender`) remains positive and significant after controlling for reciprocity, transitivity, alcohol effects, and distance. The **distance effect** (`edgecov.logdistance`) is negative and significant, so ties are less likely as log-distance increases (greater geographic separation). The **degree effects** (`gwideg.fixed` and `gwodeg.fixed`) are positive and significant. This indicates that pupils are Incentivized to increase their in- and out-degrees (with diminishing returns).
-
+Controls: **gender homophily** (`nodematch.gender`) remains positive and significant after controlling for reciprocity, transitivity, alcohol effects, and distance. The **distance effect** (`edgecov.logdistance`) is negative and significant, so ties are less likely as log-distance increases (greater geographic separation). The **degree effects** (`gwideg.fixed` and `gwodeg.fixed`) are positive and significant, which indicates the opposite of a tendency to concentrate incoming and outgoing friendship into particular individuals.
 ---
 
 ## (6) Model improvements
 
 The GOF results suggest several targeted extensions:
 
-1. Isolation: add a term controlling for isolated nodes (e.g. `isolates`). Currently the simulated networks produce much more isolates than the reference network. The simulated networks also have much more pairs of nodes that are far apart. This indicates that these networks are much less connected. Controlling for isolates should help us improve on that.
+1. Isolation: add a term controlling for isolated nodes (e.g. `isolates`). Currently the simulated networks produce less isolates than the reference network. The simulated networks also have less pairs of nodes that are far apart. This indicates that these networks are more connected. Controlling for isolates should help us improve on that.
 
-2. Closure mechanisms: add directed closure terms beyond transitive shared partners, for example a cyclical shared-partner term `gwesp(decay, fixed=TRUE, type="ITP")` (tendency toward directed cycles) alongside the transitive `type="OTP"` term, or more specific triad terms if theoretically justified. While not directly changing the connectivity of the network, this should affect the out-degree distribution and the triad census, hopefully providing a better GOF.  
+2. Shared partners: add terms for shared outgoing partners, for example `gwesp(decay, fixed=TRUE, type="OSP")` (tendency toward sharing outgoing connections) alongside the transitive `type="OTP"` term, or more specific triad terms if theoretically justified. While not directly changing the connectivity of the network, this should affect the out-degree distribution and the triad census, hopefully providing a better GOF.
 
 These changes should be added incrementally, re-checking (i) MCMC
 diagnostics for degeneracy and (ii) GOF after each addition.
@@ -386,8 +385,8 @@ Below are two examples of additional local-mechanism hypotheses that could be te
 \]
 where \(z_i\) is the delinquency of the \(i\)-th pupil, where \(x_{i, j}\) denotes the presence or absence of an edge from \(i\) to \(j\). We will expect a positive and significant coefficient to support this hypothesis.
  
-2. Cyclic closure: beyond transitive closure, pupils tend to form directed 3-cycles (A→B→C→A). One operationalization is the 3-cycle count \(\sum_{i,j,k} x_{ij}x_{jk}x_{ki}\). In `ergm`, a practical way to target this mechanism is a cyclical shared-partner term `gwesp(decay, fixed=TRUE, type="ITP")` (ITP corresponds to cyclical shared partners). Pictorially:
+2. Sharing partners: beyond transitive closure, pupils tend to share outgoing connections (i→k and j→k). One operationalization is the raw count \(\sum_{i,j,k} x_{ik}x_{jk}\). In `ergm`, a practical way to target this mechanism is a shared-partner term `gwesp(decay, fixed=TRUE, type="OSP")` (OSP corresponds to outgoing shared partners). Pictorially:
 \[
-i \to j \to k \to i
+i \to k \land j \to k
 \]
 We will expect a positive and significant coefficient to support this hypothesis.

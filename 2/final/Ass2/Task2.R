@@ -1,7 +1,5 @@
 #!/usr/bin/env Rscript
 
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-
 options(stringsAsFactors = FALSE)
 
 inv_logit <- function(x) 1 / (1 + exp(-x))
@@ -228,7 +226,6 @@ text(x = 0, y = 1,
      family = "mono",
      cex = 0.6)
 grDevices::dev.off()
-
 
 set.seed(3)
 gof_rds <- file.path("task2_results", "gof_full_model.rds")
